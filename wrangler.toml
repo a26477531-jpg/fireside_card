@@ -1,0 +1,27 @@
+# Cloudflare Pages 專案設定：讓 functions/ 目錄下的 API 能連到 D1 資料庫。
+#
+# 部署前要做的事（一次性）：
+#   1. npx wrangler d1 create fireside-cards-db
+#      指令執行完會印出一組 database_id，複製貼到下面的 database_id。
+#   2. npx wrangler d1 execute fireside-cards-db --file=migrations/0001_init.sql --remote
+#      （--remote 代表套用到 Cloudflare 上真正的資料庫；本機開發不用加這個参數）
+#   3. 到 Cloudflare Dashboard → Pages 專案 → Settings → Functions → D1 database bindings，
+#      把 Variable name 設成 DB、綁定到 fireside-cards-db（或是用
+#      `npx wrangler pages deployment tail` 之外的方式，透過 wrangler.toml 走 Git 部署
+#      時，Pages 會自動讀這份設定檔裡的 d1_databases）。
+#
+# 本機開發：
+#   npx wrangler pages dev . --local
+#   本機會用 SQLite 模擬 D1，不會動到雲端上的資料，資料庫檔案放在 .wrangler/ 目錄下。
+#   第一次跑之前記得先套用 migration（見下方 database_id 設定完之後的指令）：
+#   npx wrangler d1 execute fireside-cards-db --file=migrations/0001_init.sql --local
+
+name = "fireside-cards"
+pages_build_output_dir = "."
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "fireside-cards-db"
+database_id = "a2e8b949-42c0-48fe-b8fc-a2a3fb7b57c8"

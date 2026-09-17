@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="description"
+        content="搜尋怪獸、探索能力，瀏覽爐邊卡牌圖鑑。"
+    >
+
+    <title>卡牌庫｜爐邊卡牌</title>
+
+    <link
+        rel="stylesheet"
+        href="index.css"
+    >
+
+    <script
+        src="cards-data.js"
+        defer
+    ></script>
+
+    <script src="translations-data.js" defer></script>
+    <script src="i18n.js" defer></script>
+    <script src="card-text-fit.js" defer></script>
+
+    <script
+        src="app.js"
+        defer
+    ></script>
+
+    <script src="promotions-data.js" defer></script>
+    <script src="promotions.js" defer></script>
+    <script src="shop.js" defer></script>
+    <script src="account.js" defer></script>
+<link rel="stylesheet" href="promotions.css">
+</head>
+
+
+<body>
+
+    <!-- 跳過導覽列，直接前往主要內容 -->
+    <a
+        class="skip"
+        href="#library"
+    >
+        跳至卡牌庫
+    </a>
+
+
+    <!-- =========================
+         導覽列
+    ========================== -->
+    <header class="navbar">
+
+        <a
+            class="logo"
+            href="index.html"
+        >
+            <b>✦</b>
+
+            <span>
+                爐邊卡牌
+
+                <small>
+                    FIRESIDE CARDS
+                </small>
+            </span>
+        </a>
+
+
+        <nav aria-label="主要導覽">
+
+            <a
+                class="active"
+                href="#library"
+            >
+                卡牌庫
+            </a>
+
+            <a href="#collections">
+                主題系列
+            </a>
+
+            <a href="#about">
+                關於圖鑑
+            </a>
+
+            <a href="#shop">
+                商城
+            </a>
+
+        </nav>
+
+
+        <label class="language-picker">
+            <span>Language</span>
+            <select id="language" aria-label="Language / 語言 / 言語 / 언어">
+                <option value="zh-TW">繁體中文</option>
+                <option value="en">English</option>
+                <option value="ja">日本語</option>
+                <option value="ko">한국어</option>
+            </select>
+        </label>
+
+        <a
+            id="nav-account"
+            class="nav-account"
+            href="register.html"
+        >
+            註冊
+        </a>
+
+        <a
+            class="nav-cta"
+            href="#library"
+        >
+            探索卡牌　›
+        </a>
+
+    </header>
+
+
+    <!-- =========================
+         主視覺 / 輪播圖
+    ========================== -->
+    <section
+        class="hero"
+        aria-label="主題卡牌輪播"
+        aria-roledescription="輪播"
+    >
+
+        <div
+            id="banner-carousel"
+            class="banner-carousel"
+        >
+
+            <!-- 輪播圖片 -->
+            <div class="banner-slides"><!-- 由 promotions.js 依資料集組裝 --></div>
+
+
+            <!-- 上一張 -->
+            <button
+                id="banner-prev"
+                class="banner-arrow prev"
+                aria-label="上一張輪播圖"
+            >
+                ‹
+            </button>
+
+
+            <!-- 下一張 -->
+            <button
+                id="banner-next"
+                class="banner-arrow next"
+                aria-label="下一張輪播圖"
+            >
+                ›
+            </button>
+
+
+            <!-- 輪播控制區 -->
+            <div class="banner-controls">
+
+
+
+
+
+                <!-- 暫停 / 播放 -->
+                <button
+                    id="banner-play"
+                    aria-label="暫停自動播放"
+                >
+                    暫停
+                </button>
+
+
+                <!-- 目前圖片編號 -->
+                <span
+                    id="banner-count"
+                    aria-live="off"
+                >
+                    1 / 3
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             主題系列切換
+        ========================== -->
+        <nav
+            id="collections"
+            class="collection-tabs"
+            aria-label="主題系列"
+        >
+
+            <button
+                class="selected"
+                data-collection="all"
+                aria-pressed="true"
+            >
+                ✦
+                <span>全部卡牌</span>
+            </button>
+
+
+            <button
+                data-collection="深海軍團"
+                aria-pressed="false"
+            >
+                ≈
+                <span>深海軍團</span>
+            </button>
+
+
+            <button
+                data-collection="荒野之盟"
+                aria-pressed="false"
+            >
+                ♧
+                <span>荒野之盟</span>
+            </button>
+
+
+            <button
+                data-collection="暗影領域"
+                aria-pressed="false"
+            >
+                ☽
+                <span>暗影領域</span>
+            </button>
+
+        </nav>
+
+    </section>
+
+
+    <!-- =========================
+         卡牌庫主要內容
+    ========================== -->
+    <main id="library">
+
+
+        <!-- =========================
+             卡牌篩選列
+        ========================== -->
+        <section
+            class="filter-bar"
+            aria-label="篩選卡牌"
+        >
+
+            <!-- 系列篩選 -->
+            <select
+                id="set"
+                aria-label="卡牌系列"
+            >
+
+                <option value="all">
+                    全部系列
+                </option>
+
+                <option>
+                    深海軍團
+                </option>
+
+                <option>
+                    荒野之盟
+                </option>
+
+                <option>
+                    暗影領域
+                </option>
+
+            </select>
+
+
+            <!-- 能力篩選 -->
+            <select
+                id="ability"
+                aria-label="能力類型"
+            >
+
+                <option value="all">
+                    全部能力
+                </option>
+
+                <option>登場</option>
+                <option>被動</option>
+                <option>嘲諷</option>
+                <option>護盾</option>
+                <option>恢復</option>
+
+            </select>
+
+
+            <!-- 法力篩選 -->
+            <!-- 裡面的按鈕會由 JavaScript 建立 -->
+            <div
+                id="mana-filter"
+                class="mana-filter"
+                role="group"
+                aria-label="法力費用"
+            ></div>
+
+
+            <!-- 搜尋欄 -->
+            <label class="search-wrap">
+
+                <input
+                    id="search"
+                    type="search"
+                    placeholder="搜尋卡牌"
+                    aria-label="搜尋名稱或能力"
+                >
+
+                <span aria-hidden="true">
+                    ⌕
+                </span>
+
+            </label>
+
+
+            <!-- 顯示更多篩選 -->
+            <button
+                id="more-toggle"
+                class="filter-button"
+                aria-expanded="false"
+                aria-controls="extra-filters"
+            >
+                ☷ 篩選方式
+            </button>
+
+        </section>
+
+
+        <!-- =========================
+             額外篩選
+        ========================== -->
+        <section
+            id="extra-filters"
+            class="extra-filters"
+            hidden
+        >
+
+            <label>
+                最低攻擊
+
+                <input
+                    id="attack"
+                    type="number"
+                    min="0"
+                    max="99"
+                    value="0"
+                >
+            </label>
+
+
+            <label>
+                最低生命
+
+                <input
+                    id="health"
+                    type="number"
+                    min="0"
+                    max="99"
+                    value="0"
+                >
+            </label>
+
+
+            <button
+                id="reset"
+                class="text-button"
+            >
+                清除所有篩選
+            </button>
+
+        </section>
+
+
+        <!-- =========================
+             卡牌列表內容
+        ========================== -->
+        <div class="library-inner">
+
+
+            <!-- =========================
+                 卡牌載入動畫
+                 卡牌畫面組裝完成前顯示，完成後立即切換到卡牌畫面（見 app.js 尾端）
+            ========================== -->
+            <div
+                id="cards-loading"
+                class="cards-loading"
+                role="status"
+                aria-live="polite"
+            >
+                <span
+                    class="loading-mark"
+                    aria-hidden="true"
+                >✦</span>
+
+                <p>載入卡牌中…</p>
+            </div>
+
+            <noscript>
+                <style>#cards-loading{display:none}#library-results{display:block}</style>
+            </noscript>
+
+
+            <div
+                id="library-results"
+                class="library-results"
+                hidden
+            >
+
+
+            <!-- 結果工具列 -->
+            <div class="results-toolbar">
+
+                <!-- 搜尋結果數量 -->
+                <p
+                    id="results-count"
+                    role="status"
+                    aria-live="polite"
+                ></p>
+
+
+                <div class="view-controls">
+
+                    <!-- 排序方式 -->
+                    <label>
+
+                        分類方式：
+
+                        <select id="sort">
+
+                            <option value="mana-asc">
+                                法力：低到高
+                            </option>
+
+                            <option value="mana-desc">
+                                法力：高到低
+                            </option>
+
+                            <option value="attack-desc">
+                                攻擊：高到低
+                            </option>
+
+                            <option value="name">
+                                卡牌名稱
+                            </option>
+
+                        </select>
+
+                    </label>
+
+
+                    <!-- 格狀 / 列表檢視 -->
+                    <div
+                        class="view-switch"
+                        role="group"
+                        aria-label="檢視方式"
+                    >
+
+                        <button
+                            id="grid-view"
+                            class="selected"
+                            aria-label="卡牌檢視"
+                            aria-pressed="true"
+                        >
+                            ▦
+                        </button>
+
+
+                        <button
+                            id="list-view"
+                            aria-label="條列檢視"
+                            aria-pressed="false"
+                        >
+                            ☷
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================
+                 卡牌區標題
+            ========================== -->
+            <div class="section-title">
+
+                <span></span>
+
+                <h2 id="section-heading">
+                    全部卡牌
+                </h2>
+
+                <span></span>
+
+            </div>
+
+
+            <!-- =========================
+                 卡牌容器
+                 卡牌會由 JavaScript 插入
+            ========================== -->
+            <div
+                id="cards"
+                class="cards-grid"
+            ></div>
+
+
+            <!-- =========================
+                 沒有搜尋結果
+            ========================== -->
+            <div
+                id="empty"
+                class="empty"
+                hidden
+            >
+
+                <h3>
+                    沒有找到符合的卡牌
+                </h3>
+
+                <p>
+                    試試其他關鍵字，或放寬篩選條件。
+                </p>
+
+                <button
+                    id="empty-reset"
+                    class="gold-button"
+                >
+                    清除篩選
+                </button>
+
+            </div>
+
+
+            <!-- =========================
+                 分頁
+                 按鈕會由 JavaScript 建立
+            ========================== -->
+            <nav
+                id="pagination"
+                class="pagination"
+                aria-label="卡牌分頁"
+
+            ></nav>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- =========================
+         卡包商城
+         示意用商城，不含真實金流；組合包內容與價格由 shop.js 插入。
+    ========================== -->
+    <section
+        id="shop"
+        class="shop"
+        aria-label="卡包商城"
+    >
+
+        <div class="shop-inner">
+
+            <div class="section-title">
+                <span></span>
+                <h2>商城</h2>
+                <span></span>
+            </div>
+
+            <p
+                id="shop-intro"
+                class="shop-intro"
+            ></p>
+
+            <div
+                id="shop-grid"
+                class="shop-grid"
+            ></div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         頁尾
+    ========================== -->
+    <footer id="about">
+
+        <span class="footer-brand">
+            ✦ 爐邊卡牌
+        </span>
+
+        <p>
+            收藏故事，探索下一場冒險。
+        </p>
+
+        <small>
+            獨立卡牌展示模板 · 非暴雪官方網站
+        </small>
+
+    </footer>
+
+
+    <!-- =========================
+         卡牌詳細資料彈出視窗
+    ========================== -->
+    <dialog
+        id="detail"
+        aria-labelledby="detail-title"
+    >
+
+        <!-- 關閉按鈕 -->
+        <button
+            id="close-detail"
+            class="close-detail"
+            aria-label="關閉卡牌詳情"
+        >
+            ×
+        </button>
+
+
+        <!-- 詳細內容由 JavaScript 插入 -->
+        <div id="detail-content"></div>
+
+    </dialog>
+
+
+    <!-- =========================
+         商城組合包詳細資料彈出視窗
+    ========================== -->
+    <dialog
+        id="shop-detail"
+        aria-labelledby="shop-detail-title"
+    >
+
+        <!-- 關閉按鈕 -->
+        <button
+            id="close-shop-detail"
+            class="close-detail"
+            aria-label="關閉組合包詳情"
+        >
+            ×
+        </button>
+
+
+        <!-- 詳細內容由 JavaScript 插入 -->
+        <div id="shop-detail-content"></div>
+
+    </dialog>
+
+</body>
+
+</html>

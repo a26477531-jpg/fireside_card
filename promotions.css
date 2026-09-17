@@ -1,0 +1,36 @@
+/* Editable promotion composition. No text or card is baked into a banner. */
+.banner-slides { height:auto; aspect-ratio:auto; overflow:visible; }
+.promo-slide { --glow:#247d89; display:grid; grid-template-columns:minmax(0, .8fr) minmax(0, 1.2fr); align-items:center; gap:4%; padding:48px max(5%, calc((100% - 1680px)/2)); position:relative; isolation:isolate; background:radial-gradient(ellipse at 80% 30%,var(--glow),transparent 65%),linear-gradient(120deg,#07131c,#101c25); color:#f6e6bd; }
+.promo-slide[hidden] { display:none; }
+.promo-inferno { --glow:#913e21; }
+.promo-grove { --glow:#47613c; }
+.promo-slide:before { content:''; position:absolute; z-index:-1; inset:18px; border:1px solid #d7b77c40; pointer-events:none; background:repeating-linear-gradient(125deg,transparent 0 90px,#f7dfa805 90px 91px); }
+.promo-copy { padding:24px 0; }
+.promo-eyebrow { font-size:13px; letter-spacing:.22em; color:#d8bb80; margin:0 0 24px; }
+.promo-copy h2 { font:700 clamp(32px,4.8vw,84px)/1.15 var(--serif); color:#f6dc9b; margin:0 0 24px; text-shadow:0 3px 20px #0008; overflow-wrap:anywhere; }
+.promo-subtitle { font-size:clamp(18px,2vw,32px); margin:0 0 16px; }
+.promo-description { font-size:clamp(15px,1.3vw,21px); max-width:32em; color:#ded8c9; line-height:1.8; }
+.promo-offer { margin:28px 0 16px; font-size:14px; letter-spacing:.12em; color:#d8bb80; }
+.promo-cta { display:inline-flex; align-items:center; gap:40px; padding:14px 24px; border:1px solid #d4b372; background:linear-gradient(135deg,#ead19a,#b8934f); color:#201b12; text-decoration:none; font-weight:bold; border-radius:3px; }
+.promo-cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; align-items:center; }
+.promo-card { display:block; width:100%; padding:0; border:0; background:none; border-radius:12px; min-width:0; text-align:initial; }
+.promo-card .card-art { filter:drop-shadow(0 14px 16px #0009); }
+.promo-card:hover { transform:translateY(-4px); }
+.promo-card:focus-visible,.promo-cta:focus-visible { outline:3px solid #fff0b3; outline-offset:5px; }
+.banner-controls { position:relative; background:#101c25; }
+.banner-arrow { z-index:2; }
+@media(max-width:800px) {
+  .promo-slide { grid-template-columns:1fr; gap:22px; padding:32px 8% 28px; }
+  .promo-copy { padding:0; text-align:center; }
+  .promo-copy h2 { font-size:38px; margin-bottom:12px; }
+  .promo-eyebrow { margin-bottom:12px; }
+  .promo-description { margin:12px auto; }
+  .promo-offer { margin:16px 0 12px; }
+  .promo-cards { max-width:660px; width:100%; margin:auto; gap:12px; }
+  .banner-arrow { top:60%; }
+}
+@media(max-width:480px) {
+  .promo-cards { grid-template-columns:minmax(0,1fr); max-width:310px; gap:24px; }
+  .promo-copy h2 { font-size:34px; }
+}
+@media(prefers-reduced-motion:reduce) { .promo-card:hover { transform:none; } }

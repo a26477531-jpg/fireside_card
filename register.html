@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="description"
+        content="建立爐邊卡牌帳號，之後即可收藏你喜歡的卡牌。"
+    >
+
+    <title>建立帳號｜爐邊卡牌</title>
+
+    <link
+        rel="stylesheet"
+        href="index.css"
+    >
+
+    <script src="i18n.js" defer></script>
+    <script src="account.js" defer></script>
+    <script src="register.js" defer></script>
+</head>
+
+
+<body data-skip-default-title="true">
+
+    <!-- 跳過導覽列，直接前往主要內容 -->
+    <a
+        class="skip"
+        href="#register-main"
+    >
+        跳至註冊表單
+    </a>
+
+
+    <!-- =========================
+         導覽列（與首頁共用同一套樣式／翻譯）
+    ========================== -->
+    <header class="navbar">
+
+        <a
+            class="logo"
+            href="index.html"
+        >
+            <b>✦</b>
+
+            <span>
+                爐邊卡牌
+
+                <small>
+                    FIRESIDE CARDS
+                </small>
+            </span>
+        </a>
+
+
+        <nav aria-label="主要導覽">
+
+            <a href="index.html#library">
+                卡牌庫
+            </a>
+
+            <a href="index.html#collections">
+                主題系列
+            </a>
+
+            <a href="index.html#about">
+                關於圖鑑
+            </a>
+
+            <a href="index.html#shop">
+                商城
+            </a>
+
+        </nav>
+
+
+        <label class="language-picker">
+            <span>Language</span>
+            <select id="language" aria-label="Language / 語言 / 言語 / 언어">
+                <option value="zh-TW">繁體中文</option>
+                <option value="en">English</option>
+                <option value="ja">日本語</option>
+                <option value="ko">한국어</option>
+            </select>
+        </label>
+
+        <a
+            id="nav-account"
+            class="nav-account active"
+            href="register.html"
+        >
+            註冊
+        </a>
+
+        <a
+            class="nav-cta"
+            href="index.html#library"
+        >
+            探索卡牌　›
+        </a>
+
+    </header>
+
+
+    <!-- =========================
+         註冊表單
+    ========================== -->
+    <main id="register-main">
+
+        <section
+            class="register"
+            aria-label="建立帳號"
+        >
+
+            <div class="register-card">
+
+                <div class="section-title">
+                    <span></span>
+                    <h1 id="register-heading">建立帳號</h1>
+                    <span></span>
+                </div>
+
+                <p
+                    id="register-intro"
+                    class="register-intro"
+                ></p>
+
+                <!-- 已登入時顯示這裡，表單會被隱藏 -->
+                <div
+                    id="register-signed-in"
+                    class="register-signed-in"
+                    hidden
+                >
+                    <p id="register-signed-in-text"></p>
+
+                    <div class="register-signed-in-actions">
+                        <a
+                            id="register-go-home"
+                            class="gold-button"
+                            href="index.html"
+                        >
+                            返回卡牌庫
+                        </a>
+
+                        <button
+                            id="register-logout"
+                            class="ghost-button"
+                            type="button"
+                        >
+                            登出
+                        </button>
+                    </div>
+                </div>
+
+                <form
+                    id="register-form"
+                    novalidate
+                >
+
+                    <!-- Email -->
+                    <div class="field">
+                        <label for="field-email">
+                            <span id="label-email">電子郵件</span>
+                        </label>
+
+                        <input
+                            id="field-email"
+                            name="email"
+                            type="email"
+                            autocomplete="email"
+                            required
+                        >
+
+                        <p
+                            class="field-message"
+                            id="message-email"
+                            aria-live="polite"
+                        ></p>
+                    </div>
+
+                    <!-- 使用者名稱 -->
+                    <div class="field">
+                        <label for="field-username">
+                            <span id="label-username">使用者名稱</span>
+                        </label>
+
+                        <input
+                            id="field-username"
+                            name="username"
+                            type="text"
+                            autocomplete="username"
+                            required
+                        >
+
+                        <p
+                            class="field-hint"
+                            id="hint-username"
+                        ></p>
+
+                        <p
+                            class="field-message"
+                            id="message-username"
+                            aria-live="polite"
+                        ></p>
+                    </div>
+
+                    <!-- 密碼 -->
+                    <div class="field">
+                        <label for="field-password">
+                            <span id="label-password">密碼</span>
+                        </label>
+
+                        <input
+                            id="field-password"
+                            name="password"
+                            type="password"
+                            autocomplete="new-password"
+                            required
+                        >
+
+                        <p
+                            class="field-hint"
+                            id="hint-password"
+                        ></p>
+
+                        <div
+                            class="password-strength"
+                            id="password-strength"
+                            data-score="0"
+                        >
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+
+                        <p
+                            class="field-message"
+                            id="message-password"
+                            aria-live="polite"
+                        ></p>
+                    </div>
+
+                    <!-- 確認密碼 -->
+                    <div class="field">
+                        <label for="field-password-confirm">
+                            <span id="label-password-confirm">確認密碼</span>
+                        </label>
+
+                        <input
+                            id="field-password-confirm"
+                            name="passwordConfirm"
+                            type="password"
+                            autocomplete="new-password"
+                            required
+                        >
+
+                        <p
+                            class="field-message"
+                            id="message-password-confirm"
+                            aria-live="polite"
+                        ></p>
+                    </div>
+
+                    <p
+                        class="form-message"
+                        id="form-message"
+                        aria-live="polite"
+                    ></p>
+
+                    <button
+                        id="submit-register"
+                        class="gold-button register-submit"
+                        type="submit"
+                    >
+                        建立帳號
+                    </button>
+
+                </form>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================
+         頁尾（與首頁共用同一套樣式／翻譯）
+    ========================== -->
+    <footer id="about">
+
+        <span class="footer-brand">
+            ✦ 爐邊卡牌
+        </span>
+
+        <p>
+            收藏故事，探索下一場冒險。
+        </p>
+
+        <small>
+            獨立卡牌展示模板 · 非暴雪官方網站
+        </small>
+
+    </footer>
+
+</body>
+
+</html>
