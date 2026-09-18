@@ -261,6 +261,8 @@
     $('submit-register').textContent = t('submitRegister');
     $('register-go-home').textContent = t('goToHome');
     $('register-logout').textContent = t('logout');
+    if ($('already-have-account')) $('already-have-account').textContent = t('alreadyHaveAccount');
+    if ($('go-to-login')) $('go-to-login').textContent = t('goToLogin');
     // 已經顯示出來的驗證訊息（不管是成功還是錯誤）都要換成新語言的文字。
     for (const key of Object.keys(fields)) rerenderFieldMessage(key);
     renderPasswordStrength(fields.password.input().value);
