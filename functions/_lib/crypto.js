@@ -11,6 +11,15 @@
 const PBKDF2_ITERATIONS = 100000;
 const HASH_BITS = 256;
 
+// 登入時如果查無此帳號（使用者名稱／Email 都對不上），還是要跑一次跟「密碼錯誤」
+// 一樣耗時的雜湊運算，再回傳跟密碼錯誤時一模一樣的錯誤訊息。
+// 原因：如果「帳號不存在」直接跳過雜湊運算馬上回應，會比「帳號存在但密碼錯」快上
+// 幾十毫秒，攻擊者量測回應時間就能反推出哪些帳號存在（時序攻擊/使用者枚舉的一種）。
+// 這裡固定用這組隨機產生、不對應任何真實密碼的雜湊值來跑 verifyPassword，讓兩種
+// 情況耗費的時間一致；這組值本身沒有任何意義，純粹是格式正確的假資料。
+export const DUMMY_PASSWORD_HASH =
+  'pbkdf2-sha256$100000$iY5H4WXRSAULHifUroJIbg==$8W34jWGcqyTqkjLkW3kkbevX6+QSmJrC20PuDFJDNTI=';
+
 function toBase64(bytes) {
   let binary = '';
   for (const byte of bytes) binary += String.fromCharCode(byte);

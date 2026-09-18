@@ -24,9 +24,13 @@
 
   function renderNav(user) {
     const link = $('nav-account');
-    if (!link) return;
-    link.textContent = user ? user.username : (I18n ? I18n.t('register') : '註冊');
-    link.classList.toggle('is-signed-in', Boolean(user));
+    if (link) {
+      link.textContent = user ? user.username : (I18n ? I18n.t('register') : '註冊');
+      link.classList.toggle('is-signed-in', Boolean(user));
+    }
+    // 已登入時不需要再顯示「登入」連結（不然點進去只會看到「你已經登入」的畫面）。
+    const loginLink = $('nav-login');
+    if (loginLink) loginLink.hidden = Boolean(user);
   }
 
   async function refresh() {
