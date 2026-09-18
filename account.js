@@ -30,7 +30,10 @@
     }
     // 已登入時不需要再顯示「登入」連結（不然點進去只會看到「你已經登入」的畫面）。
     const loginLink = $('nav-login');
-    if (loginLink) loginLink.hidden = Boolean(user);
+    if (loginLink) {
+      loginLink.hidden = Boolean(user);
+      loginLink.textContent = I18n ? I18n.t('login') : '登入';
+    }
   }
 
   async function refresh() {

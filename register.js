@@ -266,6 +266,11 @@
     // 已經顯示出來的驗證訊息（不管是成功還是錯誤）都要換成新語言的文字。
     for (const key of Object.keys(fields)) rerenderFieldMessage(key);
     renderPasswordStrength(fields.password.input().value);
+    // I18n.applyUI() 只認得「跳至卡牌庫」這種首頁通用文字，這裡蓋回註冊頁專屬的版本。
+    const skip = document.querySelector('.skip');
+    if (skip) skip.textContent = t('skipToRegister');
+    const section = document.querySelector('.register');
+    if (section) section.setAttribute('aria-label', t('registerHeading'));
     const user = window.FiresideAccount && window.FiresideAccount.user;
     if (user) showSignedInState(user);
   }
@@ -276,7 +281,14 @@
     bindLiveValidation();
     $('register-form').addEventListener('submit', handleSubmit);
     $('register-logout').addEventListener('click', handleLogout);
-    if ($('language')) $('language').addEventListener('change', applyRegisterUI);
+    if ($('language')) {
+      // 語言切換時，除了這頁自己的文字，也要重新呼叫 I18n.applyUI()，
+      // 不然導覽列／Logo／頁尾這些「共用」文字不會跟著切換語言。
+      $('language').addEventListener('change', () => {
+        I18n.applyUI();
+        applyRegisterUI();
+      });
+    }
     document.addEventListener('fireside-account-ready', event => {
       if (event.detail.user) showSignedInState(event.detail.user);
       else showFormState();

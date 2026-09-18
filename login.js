@@ -100,6 +100,11 @@
     $('login-logout').textContent = t('logout');
     $('no-account-yet').textContent = t('noAccountYet');
     $('go-to-register').textContent = t('goToRegister');
+    // I18n.applyUI() 只認得「跳至卡牌庫」這種首頁通用文字，這裡蓋回登入頁專屬的版本。
+    const skip = document.querySelector('.skip');
+    if (skip) skip.textContent = t('skipToLogin');
+    const section = document.querySelector('.register');
+    if (section) section.setAttribute('aria-label', t('loginHeading'));
     const user = window.FiresideAccount && window.FiresideAccount.user;
     if (user) showSignedInState(user);
   }
@@ -109,7 +114,15 @@
     applyLoginUI();
     $('login-form').addEventListener('submit', handleSubmit);
     $('login-logout').addEventListener('click', handleLogout);
-    if ($('language')) $('language').addEventListener('change', applyLoginUI);
+    if ($('language')) {
+      // 語言切換時，除了這頁自己的文字，也要重新呼叫 I18n.applyUI()，
+      // 不然導覽列／Logo／頁尾這些「共用」文字不會跟著切換語言
+      // （這正是先前「明明選了繁中，畫面卻還是英文/日文夾雜」的原因）。
+      $('language').addEventListener('change', () => {
+        I18n.applyUI();
+        applyLoginUI();
+      });
+    }
     document.addEventListener('fireside-account-ready', event => {
       if (event.detail.user) showSignedInState(event.detail.user);
       else showFormState();
