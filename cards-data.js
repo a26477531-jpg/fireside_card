@@ -24,7 +24,7 @@ window.CARDS = [
         "text": "你的回合結束時，使另一名友方怪獸獲得 1 點護盾。"
       }
     ],
-    "image": "cards-clean-layout-31/01-murloc-chief.png",
+    "image": "cards-clean-layout-31/01-murloc-chief.webp",
     "collection": "深海軍團",
     "rulesText": "登場｜部族號令\n使另一名友方怪獸獲得 +2 戰鬥值，持續至回合結束。\n\n被動｜潮鱗護衛\n你的回合結束時，使另一名友方怪獸獲得 1 點護盾。",
     "nameLayout": {
@@ -55,7 +55,7 @@ window.CARDS = [
         "text": "此怪獸第一次被擊敗時，以 1 點血量復活。"
       }
     ],
-    "image": "cards-clean-layout-31/02-skeleton-soldier.png",
+    "image": "cards-clean-layout-31/02-skeleton-soldier.webp",
     "collection": "暗影領域",
     "rulesText": "被動｜亡骨復起\n此怪獸第一次被擊敗時，以 1 點血量復活。",
     "nameLayout": {
@@ -86,7 +86,7 @@ window.CARDS = [
         "text": "此怪獸擊敗敵方怪獸後，恢復自身 2 點血量。"
       }
     ],
-    "image": "cards-clean-layout-31/03-ghoul.png",
+    "image": "cards-clean-layout-31/03-ghoul.webp",
     "collection": "暗影領域",
     "rulesText": "被動｜腐宴\n此怪獸擊敗敵方怪獸後，恢復自身 2 點血量。",
     "nameLayout": {
@@ -117,7 +117,7 @@ window.CARDS = [
         "text": "移除一名敵方怪獸的所有護盾。"
       }
     ],
-    "image": "cards-clean-layout-31/04-greatmaul-soldier.png",
+    "image": "cards-clean-layout-31/04-greatmaul-soldier.webp",
     "collection": "荒野之盟",
     "rulesText": "登場｜碎甲重擊\n移除一名敵方怪獸的所有護盾。",
     "nameLayout": {
@@ -148,7 +148,7 @@ window.CARDS = [
         "text": "每回合第一次攻擊後，對同一目標再造成 2 點傷害。"
       }
     ],
-    "image": "cards-clean-layout-31/05-two-headed-cyclops.png",
+    "image": "cards-clean-layout-31/05-two-headed-cyclops.webp",
     "collection": "荒野之盟",
     "rulesText": "被動｜雙顱猛攻\n每回合第一次攻擊後，對同一目標再造成 2 點傷害。",
     "nameLayout": {
@@ -179,7 +179,7 @@ window.CARDS = [
         "text": "抽 1 張牌。"
       }
     ],
-    "image": "cards-clean-layout-31/06-goblin-merchant.png",
+    "image": "cards-clean-layout-31/06-goblin-merchant.webp",
     "collection": "荒野之盟",
     "rulesText": "登場｜奇貨交易\n抽 1 張牌。",
     "nameLayout": {
@@ -210,7 +210,7 @@ window.CARDS = [
         "text": "自身血量為 3 點以下時，戰鬥值增加 2 點。"
       }
     ],
-    "image": "cards-clean-layout-31/07-redtusk-orc.png",
+    "image": "cards-clean-layout-31/07-redtusk-orc.webp",
     "collection": "荒野之盟",
     "rulesText": "被動｜赤牙狂怒\n自身血量為 3 點以下時，戰鬥值增加 2 點。",
     "nameLayout": {
@@ -245,7 +245,7 @@ window.CARDS = [
         "text": "你的回合結束時，使自身獲得 1 點護盾。"
       }
     ],
-    "image": "cards-clean-layout-31/08-antler-shaman.png",
+    "image": "cards-clean-layout-31/08-antler-shaman.webp",
     "collection": "荒野之盟",
     "rulesText": "登場｜林靈恩賜\n使一名友方怪獸恢復 3 點血量。\n\n被動｜枝葉庇護\n你的回合結束時，使自身獲得 1 點護盾。",
     "nameLayout": {
@@ -276,7 +276,7 @@ window.CARDS = [
         "text": "登場的回合即可攻擊。"
       }
     ],
-    "image": "cards-clean-layout-31/09-wolf-raider.png",
+    "image": "cards-clean-layout-31/09-wolf-raider.webp",
     "collection": "荒野之盟",
     "rulesText": "被動｜突襲\n登場的回合即可攻擊。",
     "nameLayout": {
@@ -307,7 +307,7 @@ window.CARDS = [
         "text": "對一名已受傷的敵方怪獸造成 2 點傷害。"
       }
     ],
-    "image": "cards-clean-layout-31/10-gnoll-headhunter.png",
+    "image": "cards-clean-layout-31/10-gnoll-headhunter.webp",
     "collection": "荒野之盟",
     "rulesText": "登場｜獵首標記\n對一名已受傷的敵方怪獸造成 2 點傷害。",
     "nameLayout": {
@@ -342,7 +342,7 @@ window.CARDS = [
         "text": "你的回合開始時，恢復自身 1 點血量。"
       }
     ],
-    "image": "cards-clean-layout-31/11-hollow-treant.png",
+    "image": "cards-clean-layout-31/11-hollow-treant.webp",
     "collection": "荒野之盟",
     "rulesText": "被動｜嘲諷\n敵方必須優先攻擊此怪獸。\n\n被動｜老樹新生\n你的回合開始時，恢復自身 1 點血量。",
     "nameLayout": {
@@ -373,7 +373,7 @@ window.CARDS = [
         "text": "使一名敵方怪獸的戰鬥值降低 2 點，持續至你的下個回合開始。"
       }
     ],
-    "image": "cards-clean-layout-31/12-moonmoth-fae.png",
+    "image": "cards-clean-layout-31/12-moonmoth-fae.webp",
     "collection": "荒野之盟",
     "rulesText": "登場｜月粉迷夢\n使一名敵方怪獸的戰鬥值降低 2 點，持續至你的下個回合開始。",
     "nameLayout": {
@@ -408,7 +408,7 @@ window.CARDS = [
         "text": "你的回合結束時，使自身恢復 1 點血量。"
       }
     ],
-    "image": "cards-clean-layout-31/13-tide-priest.png",
+    "image": "cards-clean-layout-31/13-tide-priest.webp",
     "collection": "深海軍團",
     "rulesText": "登場｜回潮治癒\n使所有友方怪獸恢復 1 點血量。\n\n被動｜潮汐祝禱\n你的回合結束時，使自身恢復 1 點血量。",
     "nameLayout": {
@@ -439,7 +439,7 @@ window.CARDS = [
         "text": "獲得 3 點護盾，優先抵擋傷害。"
       }
     ],
-    "image": "cards-clean-layout-31/14-crab-gladiator.png",
+    "image": "cards-clean-layout-31/14-crab-gladiator.webp",
     "collection": "深海軍團",
     "rulesText": "登場｜甲殼防禦\n獲得 3 點護盾，優先抵擋傷害。",
     "nameLayout": {
@@ -474,7 +474,7 @@ window.CARDS = [
         "text": "獲得 2 點護盾，優先抵擋傷害。"
       }
     ],
-    "image": "cards-clean-layout-31/15-shipwreck-hermit.png",
+    "image": "cards-clean-layout-31/15-shipwreck-hermit.webp",
     "collection": "深海軍團",
     "rulesText": "被動｜嘲諷\n敵方必須優先攻擊此怪獸。\n\n登場｜殘船護殼\n獲得 2 點護盾，優先抵擋傷害。",
     "nameLayout": {
@@ -505,7 +505,7 @@ window.CARDS = [
         "text": "使一名敵方怪獸的戰鬥值降低 1 點，持續至你的下個回合開始。"
       }
     ],
-    "image": "cards-clean-layout-31/16-drowned-sailor.png",
+    "image": "cards-clean-layout-31/16-drowned-sailor.webp",
     "collection": "深海軍團",
     "rulesText": "登場｜冰冷拖曳\n使一名敵方怪獸的戰鬥值降低 1 點，持續至你的下個回合開始。",
     "nameLayout": {
@@ -536,7 +536,7 @@ window.CARDS = [
         "text": "使一名敵方怪獸無法攻擊，持續至你的下個回合開始。"
       }
     ],
-    "image": "cards-clean-layout-31/17-reef-siren.png",
+    "image": "cards-clean-layout-31/17-reef-siren.webp",
     "collection": "深海軍團",
     "rulesText": "登場｜惑心歌聲\n使一名敵方怪獸無法攻擊，持續至你的下個回合開始。",
     "nameLayout": {
@@ -571,7 +571,7 @@ window.CARDS = [
         "text": "被擊敗時，對一名敵方怪獸造成 1 點傷害。"
       }
     ],
-    "image": "cards-clean-layout-31/18-ash-hound.png",
+    "image": "cards-clean-layout-31/18-ash-hound.webp",
     "collection": "暗影領域",
     "rulesText": "被動｜突襲\n登場的回合即可攻擊。\n\n被動｜餘火\n被擊敗時，對一名敵方怪獸造成 1 點傷害。",
     "nameLayout": {
@@ -602,7 +602,7 @@ window.CARDS = [
         "text": "每回合第一次受到攻擊後，對攻擊者造成 2 點傷害。"
       }
     ],
-    "image": "cards-clean-layout-31/19-mirror-succubus.png",
+    "image": "cards-clean-layout-31/19-mirror-succubus.webp",
     "collection": "暗影領域",
     "rulesText": "被動｜鏡面反射\n每回合第一次受到攻擊後，對攻擊者造成 2 點傷害。",
     "nameLayout": {
@@ -637,7 +637,7 @@ window.CARDS = [
         "text": "你的回合結束時，使另一名友方怪獸獲得 1 點護盾。"
       }
     ],
-    "image": "cards-clean-layout-31/20-sulfur-duke.png",
+    "image": "cards-clean-layout-31/20-sulfur-duke.webp",
     "collection": "暗影領域",
     "rulesText": "登場｜硫火敕令\n對所有敵方怪獸造成 2 點傷害。\n\n被動｜公爵威儀\n你的回合結束時，使另一名友方怪獸獲得 1 點護盾。",
     "nameLayout": {
@@ -672,7 +672,7 @@ window.CARDS = [
         "text": "使一名敵方怪獸的戰鬥值降低 2 點，持續至你的下個回合開始。"
       }
     ],
-    "image": "cards-clean-layout-31/21-shackle-jailer.png",
+    "image": "cards-clean-layout-31/21-shackle-jailer.webp",
     "collection": "暗影領域",
     "rulesText": "被動｜嘲諷\n敵方必須優先攻擊此怪獸。\n\n登場｜鎖鏈束縛\n使一名敵方怪獸的戰鬥值降低 2 點，持續至你的下個回合開始。",
     "nameLayout": {
@@ -703,7 +703,7 @@ window.CARDS = [
         "text": "此怪獸攻擊後，使目標無法攻擊，持續至你的下個回合開始。"
       }
     ],
-    "image": "cards-clean-layout-31/22-cockatrice.png",
+    "image": "cards-clean-layout-31/22-cockatrice.webp",
     "collection": "荒野之盟",
     "rulesText": "被動｜石化凝視\n此怪獸攻擊後，使目標無法攻擊，持續至你的下個回合開始。",
     "nameLayout": {
@@ -734,7 +734,7 @@ window.CARDS = [
         "text": "每回合第一次受到攻擊後，對攻擊者造成 2 點傷害。"
       }
     ],
-    "image": "cards-clean-layout-31/23-chest-mimic.png",
+    "image": "cards-clean-layout-31/23-chest-mimic.webp",
     "collection": "暗影領域",
     "rulesText": "被動｜伏擊利齒\n每回合第一次受到攻擊後，對攻擊者造成 2 點傷害。",
     "nameLayout": {
@@ -769,7 +769,7 @@ window.CARDS = [
         "text": "使另一名友方怪獸獲得 +1 戰鬥值。"
       }
     ],
-    "image": "cards-clean-layout-31/24-dwarf-elf.png",
+    "image": "cards-clean-layout-31/24-dwarf-elf.webp",
     "collection": "荒野之盟",
     "rulesText": "登場｜符石護甲\n獲得 2 點護盾，優先抵擋傷害。\n\n戰吼｜鍛造之力\n使另一名友方怪獸獲得 +1 戰鬥值。",
     "nameLayout": {
@@ -804,7 +804,7 @@ window.CARDS = [
         "text": "你的回合開始時，恢復自身 2 點血量。"
       }
     ],
-    "image": "cards-clean-layout-31/25-cthulhu.png",
+    "image": "cards-clean-layout-31/25-cthulhu.webp",
     "collection": "深海軍團",
     "rulesText": "登場｜深淵低語\n使所有敵方怪獸的戰鬥值降低 2 點，持續至你的下個回合開始。\n\n被動｜古神再生\n你的回合開始時，恢復自身 2 點血量。",
     "nameLayout": {
@@ -839,7 +839,7 @@ window.CARDS = [
         "text": "登場時，移除一名敵方怪獸的護盾。"
       }
     ],
-    "image": "cards-clean-layout-31/26-viking-berserker.png",
+    "image": "cards-clean-layout-31/26-viking-berserker.webp",
     "collection": "荒野之盟",
     "rulesText": "被動｜浴血狂怒\n自身血量為 4 點以下時，戰鬥值增加 3 點。\n\n戰吼｜破盾猛擊\n登場時，移除一名敵方怪獸的護盾。",
     "nameLayout": {
@@ -874,7 +874,7 @@ window.CARDS = [
         "text": "你的回合結束時，使另一名友方怪獸獲得 1 點護盾。"
       }
     ],
-    "image": "cards-clean-layout-31/27-elven-handmaiden.png",
+    "image": "cards-clean-layout-31/27-elven-handmaiden.webp",
     "collection": "荒野之盟",
     "rulesText": "登場｜晨露恩澤\n使一名友方怪獸恢復 3 點血量。\n\n被動｜靈葉守護\n你的回合結束時，使另一名友方怪獸獲得 1 點護盾。",
     "nameLayout": {
@@ -909,7 +909,7 @@ window.CARDS = [
         "text": "獲得 3 點護盾，優先抵擋傷害。"
       }
     ],
-    "image": "cards-clean-layout-31/28-shield-gargoyle.png",
+    "image": "cards-clean-layout-31/28-shield-gargoyle.webp",
     "collection": "荒野之盟",
     "rulesText": "被動｜嘲諷\n敵方必須優先攻擊此怪獸。\n\n登場｜石化護盾\n獲得 3 點護盾，優先抵擋傷害。",
     "nameLayout": {
@@ -944,7 +944,7 @@ window.CARDS = [
         "text": "受到攻擊後，對攻擊者造成 1 點傷害。"
       }
     ],
-    "image": "cards-clean-layout-31/29-hellfire-giant.png",
+    "image": "cards-clean-layout-31/29-hellfire-giant.webp",
     "collection": "暗影領域",
     "rulesText": "登場｜地獄烈焰\n對所有敵方怪獸造成 2 點傷害。\n\n被動｜熔火反噬\n受到攻擊後，對攻擊者造成 1 點傷害。",
     "nameLayout": {
@@ -979,7 +979,7 @@ window.CARDS = [
         "text": "你的回合結束時，使一名友方怪獸恢復 1 點血量。"
       }
     ],
-    "image": "cards-clean-layout-31/30-thunder-shaman.png",
+    "image": "cards-clean-layout-31/30-thunder-shaman.webp",
     "collection": "荒野之盟",
     "rulesText": "登場｜雷霆震擊\n對一名敵方怪獸造成 3 點傷害。\n\n被動｜祖靈祝福\n你的回合結束時，使一名友方怪獸恢復 1 點血量。",
     "nameLayout": {
@@ -1015,7 +1015,7 @@ window.CARDS = [
         "text": "你的回合開始時，使另一名友方怪獸獲得 1 點護盾。"
       }
     ],
-    "image": "cards-clean-layout-31/31-fire-salamander-totem.png",
+    "image": "cards-clean-layout-31/31-fire-salamander-totem.webp",
     "collection": "荒野之盟",
     "rulesText": "被動｜餘燼脈動\n你的回合結束時，對一名敵方怪獸造成 1 點傷害。\n\n被動｜火靈庇護\n你的回合開始時，使另一名友方怪獸獲得 1 點護盾。",
     "nameLayout": {
