@@ -27,14 +27,14 @@
     host.innerHTML = data().map(promo => {
       const copy = promo.copy[language] || promo.copy['zh-TW'];
       const theme = ['abyss', 'inferno', 'grove'].includes(promo.theme) ? promo.theme : 'abyss';
-      const href = /^#[\w-]+$/.test(promo.href) ? promo.href : '#shop';
+      const href = promo.href === '#shop' || promo.href === 'shop.html' ? 'shop.html' : (/^#[\w-]+$/.test(promo.href) ? promo.href : 'shop.html');
       const cards = promo.cardIds.map(id => window.CARDS.find(card => card.id === id)).filter(Boolean);
       return `<article class="promo-slide promo-${theme}" lang="${escapeHTML(language)}" hidden>
         <div class="promo-copy"><p class="promo-eyebrow">${escapeHTML(copy.eyebrow)}</p>
           <h2>${escapeHTML(copy.title)}</h2><p class="promo-subtitle">${escapeHTML(copy.subtitle)}</p>
           <p class="promo-description">${escapeHTML(copy.description)}</p>
           <p class="promo-offer">${escapeHTML(copy.offer)}</p>
-          <a class="promo-cta" href="${href}">${escapeHTML(copy.cta)} <span aria-hidden="true">↗</span></a>
+          <a class="promo-cta" href="${href}">${escapeHTML(copy.cta)} <svg class="promo-cta-arrow" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 19 19 5M5 5h14v14"/></svg></a>
         </div><div class="promo-cards">${cards.map(base => {
           const card = window.CardI18n.card(base);
           return `<button class="promo-card" data-promo-card="${escapeHTML(base.id)}" aria-label="${escapeHTML(window.CardI18n.t('view') + ' ' + card.name)}">${artwork(card)}</button>`;

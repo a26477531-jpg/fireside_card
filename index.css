@@ -1483,8 +1483,9 @@ dialog::backdrop {
     margin-bottom:6px
 }
 
-.shop-thumbs img {
+.shop-thumbs .card-art {
     width:84px;
+    flex:0 0 84px;
     aspect-ratio:2/3;
     object-fit:cover;
     border-radius:6px;
@@ -1595,8 +1596,8 @@ dialog::backdrop {
     cursor:pointer
 }
 
-.shop-card-open:hover .shop-thumbs img,
-.shop-card-open:focus-visible .shop-thumbs img {
+.shop-card-open:hover .shop-thumbs .card-art,
+.shop-card-open:focus-visible .shop-thumbs .card-art {
     box-shadow:0 6px 16px #67502966
 }
 
@@ -1890,3 +1891,11 @@ dialog::backdrop {
 .shop-page { min-height: 100vh; display: flex; flex-direction: column; }
 .shop-page main { flex: 1; }
 .shop-page .section-title h1 { margin: 0; font-size: clamp(24px, 3vw, 36px); }
+
+/* 窄螢幕的主要導覽獨立佔一列，不與語言及帳號連結搶寬度。 */
+@media (max-width: 1100px) {
+  .navbar { height: auto; min-height: 65px; flex-wrap: wrap; padding-block: 12px; }
+  .navbar nav { order: 3; flex: 0 0 100%; width: 100%; height: auto; margin: 0; justify-content: center; flex-wrap: wrap; }
+  .navbar nav a, .navbar nav a:last-child { display: flex; flex: 0 0 auto; height: auto; min-height: 44px; align-items: center; white-space: nowrap; padding: 6px 12px; }
+  .navbar .nav-account { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+}
