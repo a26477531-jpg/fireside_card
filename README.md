@@ -48,3 +48,11 @@
 每張卡牌的 `rulesLayout` 記錄規則區起點 `top`、高度 `height`、兩側裝飾開始位置 `notchStart` 和保留寬度 `sideInset`（均為百分比，後兩者相對規則區）。文字上半部使用較寬空間，下半部自動繞開徽章與裝飾。保留 3.7cqw 字體，以縮減行距、技能間距及個別區域設定處理重疊，未刪減規則內容。
 
 已逐張檢查 31 張的瀏覽器疊合效果，並確認卡寬 300px 與 400px 共 62 組排版沒有超出所設定的文字安全區。日後新增更長規則或更換圖片，請重新檢查對應範圍。
+
+## 帳號收藏
+
+登入後在卡牌詳情按「加入收藏／取消收藏」，卡牌庫勾選「只看收藏」可與搜尋及其他篩選一起使用。收藏依登入帳號儲存在 D1 的 favorites 表（已有 migrations/0001_init.sql），不是購買或持有卡牌。
+
+API：GET /api/favorites 列出自己的卡牌 ID；PUT /api/favorites 加入、DELETE /api/favorites 取消，寫入 body 為 {"cardId":"01"}。帳號 ID 一律由 Session 取得；重複加入不會建立重複資料。新增卡牌時須同步 functions/_lib/card-ids.js。
+
+node serve.cjs 僅提供靜態預覽，實際帳號收藏需在已套用資料表的 Cloudflare Pages Functions／D1 環境驗證。本機自動測試：node --test tests/favorites.test.cjs。

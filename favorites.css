@@ -1,0 +1,9 @@
+.favorites-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin:16px 0; }
+.favorites-toolbar label { display:flex; align-items:center; gap:8px; min-height:44px; cursor:pointer; }
+.favorites-toolbar input { width:18px; height:18px; accent-color:#95691d; }
+.favorites-toolbar p { flex-basis:100%; margin:0; }
+.favorites-toolbar button[hidden] { display:none; }
+#favorite-control { margin-bottom:16px; }
+#favorite-control p { margin:8px 0; }
+#favorite-control a { text-decoration:underline; }
+#favorite-control button:disabled { opacity:.65; cursor:wait; }
