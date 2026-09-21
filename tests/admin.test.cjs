@@ -1,6 +1,24 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const {database,invoke}=require('./helpers/d1.cjs');
+test('unmigrated or unseeded catalogs preserve legacy cards; archived catalogs never fall back',async()=>{
+  const api=await import('../functions/api/catalog.js');
+  const favorites=await import('../functions/api/favorites.js');
+  const {DB,sqlite}=database();
+  try {
+    sqlite.exec("UPDATE catalog_cards SET status='archived'");
+    let data=await (await api.onRequestGet({env:{DB}})).json();assert.equal(data.source,'database');assert.equal(data.cards.length,0);
+    assert.equal((await invoke(favorites.onRequestPut,DB,{method:'PUT',body:{cardId:'01'}})).status,400);
+    sqlite.exec('DELETE FROM catalog_cards');
+    data=await (await api.onRequestGet({env:{DB}})).json();assert.equal(data.source,'legacy');
+    assert.equal((await invoke(favorites.onRequestPut,DB,{method:'PUT',body:{cardId:'01'}})).status,200);
+    sqlite.exec('DROP TABLE catalog_cards; DROP TABLE catalog_products;');
+    data=await (await api.onRequestGet({env:{DB}})).json();assert.equal(data.source,'legacy');
+    assert.equal((await invoke(favorites.onRequestPut,DB,{method:'PUT',body:{cardId:'01'}})).status,200);
+    assert.equal((await invoke(favorites.onRequestPut,DB,{method:'PUT',body:{cardId:'unknown'}})).status,400);
+    await assert.rejects(api.onRequestGet({env:{DB:{prepare(){return {};},batch(){throw new Error('database unavailable');}}}}));
+  }finally{sqlite.close();}
+});
 test('catalog: permissions, create/edit, stale writes, atomic audit, publication and coin prices',async()=>{
   const {DB,sqlite}=database();
   try {
