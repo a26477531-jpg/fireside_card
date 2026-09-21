@@ -29,6 +29,7 @@
     <script src="translations-data.js" defer></script>
     <script src="i18n.js" defer></script>
     <script src="card-text-fit.js" defer></script>
+    <script src="card-artwork.js" defer></script>
 
     <script
         src="app.js"
@@ -37,7 +38,6 @@
 
     <script src="promotions-data.js" defer></script>
     <script src="promotions.js" defer></script>
-    <script src="shop.js" defer></script>
     <script src="account.js" defer></script>
 <link rel="stylesheet" href="promotions.css">
 </head>
@@ -92,7 +92,7 @@
                 關於圖鑑
             </a>
 
-            <a href="#shop">
+            <a href="shop.html">
                 商城
             </a>
 
@@ -576,39 +576,6 @@
 
 
     <!-- =========================
-         卡包商城
-         示意用商城，不含真實金流；組合包內容與價格由 shop.js 插入。
-    ========================== -->
-    <section
-        id="shop"
-        class="shop"
-        aria-label="卡包商城"
-    >
-
-        <div class="shop-inner">
-
-            <div class="section-title">
-                <span></span>
-                <h2>商城</h2>
-                <span></span>
-            </div>
-
-            <p
-                id="shop-intro"
-                class="shop-intro"
-            ></p>
-
-            <div
-                id="shop-grid"
-                class="shop-grid"
-            ></div>
-
-        </div>
-
-    </section>
-
-
-    <!-- =========================
          頁尾
     ========================== -->
     <footer id="about">
@@ -651,29 +618,6 @@
 
     </dialog>
 
-
-    <!-- =========================
-         商城組合包詳細資料彈出視窗
-    ========================== -->
-    <dialog
-        id="shop-detail"
-        aria-labelledby="shop-detail-title"
-    >
-
-        <!-- 關閉按鈕 -->
-        <button
-            id="close-shop-detail"
-            class="close-detail"
-            aria-label="關閉組合包詳情"
-        >
-            ×
-        </button>
-
-
-        <!-- 詳細內容由 JavaScript 插入 -->
-        <div id="shop-detail-content"></div>
-
-    </dialog>
 
 </body>
 

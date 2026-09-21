@@ -2,7 +2,7 @@
 // 三個組合包，各含 2 張卡牌，基準售價 NT$30；售價依訪客地區（GeoIP）
 // 或手動切換的語言自動換算幣別。文字沿用 i18n.js 的 labels（shop 開頭的鍵），
 // 卡牌名稱／圖片／能力文字沿用 cards-data.js + translations-data.js 既有資料，
-// 不重複維護；詳情彈出視窗重用 app.js 的 artwork()（同為非模組化 script，
+// 不重複維護；詳情彈出視窗重用 card-artwork.js 的 artwork()（同為非模組化 script，
 // 會掛在 window 上），版面比照卡牌詳情彈出視窗。
 'use strict';
 (() => {
@@ -135,12 +135,16 @@
   }
 
   function applyShopUI() {
-    const heading = document.querySelector('#shop .section-title h2');
+    I18n.applyUI();
+    document.title = `${t('shop')} | ${t('brand')}`;
+    const skip = document.querySelector('.skip');
+    if (skip) skip.textContent = t('shop');
+    const heading = $('shop-heading');
     if (heading) heading.textContent = t('shop');
     if ($('shop-intro')) $('shop-intro').textContent = t('shopIntro');
     if ($('close-shop-detail')) $('close-shop-detail').setAttribute('aria-label', t('shopClose'));
     render();
-    if (openBundleId) openShopDetail(openBundleId);
+    if (openBundleId && $('shop-detail').open) openShopDetail(openBundleId);
   }
 
   // 依訪客 IP 偵測地區，設定初始顯示幣別。失敗（離線、被封鎖、超過每日額度等）
@@ -154,7 +158,7 @@
       if (data && data.success !== false && data.country_code) {
         state.currency = COUNTRY_CURRENCY[data.country_code] || 'TWD';
         render();
-        if (openBundleId) openShopDetail(openBundleId);
+        if (openBundleId && $('shop-detail').open) openShopDetail(openBundleId);
       }
     } catch (error) {
       console.warn('[shop] GeoIP currency detection skipped:', error);
@@ -195,6 +199,7 @@
 
   if ($('language')) {
     $('language').addEventListener('change', () => {
+      I18n.setLanguage($('language').value);
       manualOverride = true;
       state.currency = LANGUAGE_CURRENCY[$('language').value] || 'TWD';
       applyShopUI();
