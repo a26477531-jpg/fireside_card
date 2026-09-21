@@ -59,6 +59,9 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     await page.goto(base+'/shop.html');await page.waitForFunction(()=>window.FiresideCatalog.state==='ready');assert.equal(await page.locator('.shop-card').count(),3);
     await context.clearCookies();await context.addCookies([{name:'fireside_session',value:'user-session',url:base}]);await page.goto(base+'/admin.html');await page.waitForFunction(()=>document.querySelector('#access').textContent.includes('沒有管理權限'));assert.ok(await page.locator('#workspace').isHidden());
     await page.goto(base+'/index.html');await page.waitForFunction(()=>window.FiresideAccount?.user?.username==='member');assert.equal(await page.locator('#nav-admin').count(),0);
+    sqlite.exec('DROP TABLE catalog_cards; DROP TABLE catalog_products;');
+    await page.goto(base+'/index.html');await page.waitForFunction(()=>window.FiresideCatalog.state==='ready');assert.equal(await page.evaluate(()=>window.CARDS.length),31);assert.equal(await page.locator('#cards .card').count(),15);
+    await page.goto(base+'/shop.html');await page.waitForFunction(()=>window.FiresideCatalog.state==='ready');assert.equal(await page.locator('.shop-card').count(),3);
     assert.deepEqual(errors,[]);
     console.log('PASS admin UI -> real handlers -> SQLite: create/edit cards, product coin price, transaction snapshots/search, mobile layout, storefront sync, dynamic favorites, archive and member denial.');
   }finally{await browser.close();await new Promise(resolve=>server.close(resolve));sqlite.close();}
