@@ -23,6 +23,13 @@
   }
 
   function renderNav(user) {
+    let adminLink = $('nav-admin');
+    if (user?.role !== 'admin') { adminLink?.remove(); adminLink=null; }
+    if (user?.role === 'admin' && !adminLink && document.querySelector('.navbar')) {
+      adminLink=document.createElement('a');adminLink.id='nav-admin';adminLink.href='admin.html';adminLink.className='nav-account';
+      document.querySelector('.navbar').append(adminLink);
+    }
+    if(adminLink){adminLink.hidden=user?.role!=='admin';adminLink.textContent=({'zh-TW':'管理後台',en:'Admin',ja:'管理',ko:'관리'})[I18n?.language]||'管理後台';}
     const link = $('nav-account');
     if (link) {
       link.textContent = user ? user.username : (I18n ? I18n.t('register') : '註冊');

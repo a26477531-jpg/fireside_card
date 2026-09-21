@@ -1,0 +1,65 @@
+const assert=require('node:assert/strict');
+const http=require('node:http');
+const fs=require('node:fs');
+const path=require('node:path');
+const {database}=require('./helpers/d1.cjs');
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+(async()=>{
+  const {DB,sqlite}=database();
+  const routes={};
+  for(const name of ['admin/cards','admin/products','admin/orders','catalog','me','favorites'])routes['/api/'+name]=await import('../functions/api/'+name+'.js');
+  const root=path.resolve(__dirname,'..');
+  const types={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.webp':'image/webp'};
+  const server=http.createServer(async(req,res)=>{
+    try {
+      const url=new URL(req.url,'http://127.0.0.1');
+      if(routes[url.pathname]){
+        const chunks=[];for await(const chunk of req)chunks.push(chunk);
+        const request=new Request('http://'+req.headers.host+req.url,{method:req.method,headers:req.headers,body:chunks.length?Buffer.concat(chunks):undefined});
+        const fn=routes[url.pathname]['onRequest'+({GET:'Get',POST:'Post',PUT:'Put',DELETE:'Delete'})[req.method]];
+        if(!fn){res.writeHead(405).end();return;}
+        const handlers=Array.isArray(fn)?fn:[fn];let i=0;
+        const context={request,env:{DB},data:{},next:()=>handlers[++i](context)};
+        const response=await handlers[0](context);res.writeHead(response.status,Object.fromEntries(response.headers));res.end(await response.text());return;
+      }
+      const file=path.resolve(root,'.'+(url.pathname==='/'?'/index.html':url.pathname));
+      if(!file.startsWith(root+path.sep)||!types[path.extname(file)]||!fs.existsSync(file)){res.writeHead(404).end();return;}
+      res.writeHead(200,{'Content-Type':types[path.extname(file)]});res.end(fs.readFileSync(file));
+    }catch(e){res.writeHead(500,{'Content-Type':'application/json'}).end(JSON.stringify({ok:false,error:e.message}));}
+  });
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  const base='http://127.0.0.1:'+server.address().port;
+  const browser=await chromium.launch({headless:true,channel:process.env.PLAYWRIGHT_CHANNEL||'msedge'});
+  try {
+    const context=await browser.newContext();await context.addCookies([{name:'fireside_session',value:'admin-session',url:base}]);
+    const page=await context.newPage();const errors=[];page.on('pageerror',e=>{errors.push(e.message);console.error(e.message);});
+    page.on('response',async r=>{if(r.url().includes('/api/') && r.status()>=400)console.error(r.status(),await r.text());});
+    await page.goto(base+'/admin.html');await page.waitForFunction(()=>document.querySelectorAll('#catalog-body tr').length===31);
+    await page.locator('#create').click();
+    const form=page.locator('#edit-form');
+    for(const [key,value] of Object.entries({id:'browser-card',name:'瀏覽器測試卡',collection:'新系列',image:'cards-clean-layout-31/01-murloc-chief.webp'}))await form.locator(`[name="${key}"]`).fill(value);
+    await form.locator('[name="status"]').selectOption('active');await page.locator('#add-ability').click();await page.locator('[data-title]').fill('測試技能');await page.locator('[data-text]').fill('測試規則文字');await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
+    await page.locator('#search').fill('browser-card');assert.equal(await page.locator('#catalog-body tr').count(),1);
+    await page.locator('[data-edit="browser-card"]').click();await form.locator('[name="name"]').fill('修改後的卡牌');await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
+    await page.locator('[data-tab="products"]').click();await page.locator('#search').fill('');await page.locator('#create').click();
+    await form.locator('[name="id"]').fill('browser-product');await form.locator('[name="name"]').fill('測試金幣商品');await form.locator('[name="status"]').selectOption('active');await form.locator('[name="coinPrice"]').fill('88');await page.locator('#product-cards input[value="browser-card"]').check();await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
+    await page.locator('[data-edit="browser-product"]').click();await form.locator('[name="coinPrice"]').fill('99');await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
+    await page.locator('[data-tab="orders"]').click();await page.locator('#orders-empty').waitFor();assert.match(await page.locator('#order-summary').textContent(),/0/);
+    sqlite.exec("INSERT INTO purchase_orders VALUES ('browser-order',2,'member','member@example.test','browser-product','交易當時名稱','COIN',88,1,88,'completed','2026-09-21T10:00:00.000Z');");
+    await page.locator('#order-search [name="player"]').fill('member');await page.locator('#order-search button').click();await page.waitForFunction(()=>document.querySelectorAll('#orders-body tr').length===1);assert.match(await page.locator('#orders-body').textContent(),/88 金幣/);
+    await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    await page.locator('[data-tab="cards"]').click();await page.locator('#search').fill('');
+    if(process.env.ADMIN_SCREENSHOT)await page.screenshot({path:process.env.ADMIN_SCREENSHOT});
+    if(process.env.ADMIN_DESKTOP_SCREENSHOT){await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:process.env.ADMIN_DESKTOP_SCREENSHOT});}
+    await page.goto(base+'/shop.html');await page.waitForFunction(()=>document.querySelectorAll('.shop-card').length===4);assert.match(await page.locator('.shop-card').filter({hasText:'測試金幣商品'}).textContent(),/99 金幣/);
+    assert.ok(await page.locator('.shop-buy').first().isDisabled());
+    await page.goto(base+'/index.html');await page.waitForFunction(()=>window.CARDS.some(c=>c.id==='browser-card'));await page.locator('#search').fill('修改後的卡牌');assert.equal(await page.locator('#cards .card').count(),1);
+    await page.locator('#cards .card').click();await page.waitForFunction(()=>!document.querySelector('#favorite-control button').disabled);await page.locator('#favorite-control button').click();await page.waitForFunction(()=>document.querySelector('#favorite-control button').getAttribute('aria-pressed')==='true');
+    await page.goto(base+'/admin.html');await page.waitForFunction(()=>document.querySelectorAll('#catalog-body tr').length===32);await page.locator('[data-edit="browser-card"]').click();await form.locator('[name="status"]').selectOption('archived');await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
+    await page.goto(base+'/shop.html');await page.waitForFunction(()=>window.FiresideCatalog.state==='ready');assert.equal(await page.locator('.shop-card').count(),3);
+    await context.clearCookies();await context.addCookies([{name:'fireside_session',value:'user-session',url:base}]);await page.goto(base+'/admin.html');await page.waitForFunction(()=>document.querySelector('#access').textContent.includes('沒有管理權限'));assert.ok(await page.locator('#workspace').isHidden());
+    await page.goto(base+'/index.html');await page.waitForFunction(()=>window.FiresideAccount?.user?.username==='member');assert.equal(await page.locator('#nav-admin').count(),0);
+    assert.deepEqual(errors,[]);
+    console.log('PASS admin UI -> real handlers -> SQLite: create/edit cards, product coin price, transaction snapshots/search, mobile layout, storefront sync, dynamic favorites, archive and member denial.');
+  }finally{await browser.close();await new Promise(resolve=>server.close(resolve));sqlite.close();}
+})().catch(e=>{console.error(e);process.exit(1);});
