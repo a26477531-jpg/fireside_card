@@ -34,3 +34,6 @@
   .promo-copy h2 { font-size:34px; }
 }
 @media(prefers-reduced-motion:reduce) { .promo-card:hover { transform:none; } }
+
+/* 使用線條箭頭，避免手機依語言套用 emoji 字型。 */
+.promo-cta-arrow { flex: 0 0 20px; }

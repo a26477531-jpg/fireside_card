@@ -34,8 +34,10 @@
   // GeoIP 偵測到的國別代碼 → 幣別；未列出的地區（含台灣）維持預設台幣。
   const COUNTRY_CURRENCY = { US: 'USD', KR: 'KRW', JP: 'JPY' };
 
-  const state = { currency: 'TWD' };
+  const state = { currency: LANGUAGE_CURRENCY[I18n.language] || 'TWD' };
   let manualOverride = false; // 使用者手動切換過語言後，GeoIP 的結果就不再覆蓋顯示幣別
+  // 已儲存的語言選擇優先於 IP 地區，重新整理也沿用。
+  try { manualOverride = I18n.supported.includes(localStorage.getItem('fireside-language')); } catch {}
   let openBundleId = null;    // 目前開啟中的組合包詳情彈窗（供語言切換／幣別更新時重新渲染）
   let shopDetailOpener = null; // 開啟詳情彈窗的按鈕，關閉時把焦點還給它
 
@@ -60,9 +62,7 @@
     grid.innerHTML = BUNDLES.map(bundle => {
       const cards = bundleCards(bundle);
       const title = cards.map(c => c.name).join(' × ');
-      const thumbs = cards.map(c =>
-        `<img src="${escapeHTML(c.image)}" alt="${escapeHTML(c.name)}" loading="lazy">`
-      ).join('');
+      const thumbs = cards.map(card => window.artwork(card)).join('');
       return `<article class="shop-card">
         <button class="shop-card-open" type="button" data-bundle="${escapeHTML(bundle.id)}" aria-label="${escapeHTML(t('view'))} ${escapeHTML(title)}">
           <div class="shop-thumbs">${thumbs}</div>
@@ -75,6 +75,7 @@
         </div>
       </article>`;
     }).join('');
+    window.CardTextFit.schedule(grid);
   }
 
   // 單張卡牌在詳情彈窗裡的區塊：大圖（含卡面上的名稱／規則文字）
@@ -207,5 +208,5 @@
   }
 
   applyShopUI();
-  detectCurrencyByGeoIP();
+  if (!manualOverride) detectCurrencyByGeoIP();
 })();
