@@ -10,7 +10,7 @@ export async function onRequestGet({ request, env }) {
 
   const row = await env.DB
     .prepare(
-      `SELECT users.id AS id, users.email AS email, users.username AS username
+      `SELECT users.id AS id, users.email AS email, users.username AS username, users.role AS role
        FROM sessions
        JOIN users ON users.id = sessions.user_id
        WHERE sessions.token = ?1 AND sessions.expires_at > ?2
