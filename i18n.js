@@ -45,8 +45,8 @@
     if($('health'))ownText($('health').parentElement,t('minHealth')+' ');
     if($('sort')){ownText($('sort').parentElement,t('sort'));for(const option of $('sort').options)option.textContent=t({'mana-asc':'manaAsc','mana-desc':'manaDesc','attack-desc':'attackDesc',name:'name'}[option.value]);}
     text('#empty h3',t('empty'));text('#empty p',t('emptyHelp'));
-    const nav=document.querySelectorAll('.navbar nav a');['library','themes','about','shop'].forEach((key,i)=>{if(nav[i])nav[i].textContent=t(key);});
-    text('.nav-cta',t('explore')+' ›');ownText(document.querySelector('.logo>span'),t('brand'));
+    document.querySelectorAll('.navbar nav a[data-nav-label]').forEach(link=>{link.textContent=t(link.dataset.navLabel);});
+    ownText(document.querySelector('.logo>span'),t('brand'));
     text('.footer-brand','✦ '+t('brand'));text('footer p',t('tagline'));text('footer small',t('footer'));text('.skip',t('skip'));
     document.querySelectorAll('[data-mana]').forEach(button=>button.setAttribute('aria-label',`${button.dataset.mana==='10'?'10+':button.dataset.mana} ${t('mana')}`));
     document.querySelectorAll('[data-slide]').forEach(button=>button.setAttribute('aria-label',`${t('slide')} ${Number(button.dataset.slide)+1}`));
