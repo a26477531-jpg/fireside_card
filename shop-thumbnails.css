@@ -1,0 +1,22 @@
+/* Keep the artwork, image and text on the same fixed-size thumbnail canvas.
+   Explicit image sizing also overrides the former .shop-thumbs img rule. */
+.shop-thumbs .card-art {
+  position: relative;
+  container-type: inline-size;
+  flex: 0 0 84px;
+  width: 84px;
+  height: 126px;
+  aspect-ratio: 2 / 3;
+  border: 0;
+  border-radius: 6px;
+}
+.shop-thumbs .card-art > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: contain;
+  border: 0;
+  border-radius: 6px;
+  box-shadow: none;
+}
