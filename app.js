@@ -10,6 +10,7 @@ const abilityText = card => card.abilities.map(a => `${a.title} ${a.text}`).join
 function filteredCards() {
   const search = $('search').value.trim().toLocaleLowerCase();
   const list = window.CARDS.map(base => ({...I18n.card(base), filterText: abilityText(base)})).filter(card =>
+    (!window.CardFavorites?.only || window.CardFavorites.has(card.id)) &&
     ($('set').value === 'all' || card.collection === $('set').value) &&
     ($('ability').value === 'all' || card.filterText.includes($('ability').value)) &&
     (state.mana === null || (state.mana === 10 ? card.mana >= 10 : card.mana === state.mana)) &&
@@ -47,6 +48,7 @@ function openDetail(id, opener) {
   detailId = id;
   if (opener) detailOpener = opener;
   $('detail-content').innerHTML = `${artwork(card,true)}<div class="detail-copy"><p class="collection">${escapeHTML(I18n.collection(card.collection))}</p><h2 id="detail-title">${escapeHTML(card.name)}</h2><p class="subtitle">${escapeHTML(card.subtitle)}</p><div class="stats"><span>${escapeHTML(t('mana'))} <b>${card.mana}</b></span><span>${escapeHTML(t('attack'))} <b>${card.attack}</b></span><span>${escapeHTML(t('health'))} <b>${card.health}</b></span></div>${card.abilities.map(a => `<h3>${escapeHTML(a.title)}</h3><p>${escapeHTML(a.text)}</p>`).join('')}</div>`;
+  window.CardFavorites?.mount(id);
   if (!$('detail').open) $('detail').showModal();
   window.CardTextFit.schedule($('detail-content'));
 }
