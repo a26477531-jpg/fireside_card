@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>管理後台｜爐邊卡牌</title>
+  <link rel="stylesheet" href="admin.css?v=1">
+  <script src="admin.js?v=1" defer></script>
+</head>
+<body>
+  <header class="topbar"><a href="index.html">✦ 爐邊卡牌</a><span>管理後台</span><a href="shop.html">前往商城 ↗</a></header>
+  <main>
+    <section id="access" role="status">正在確認管理員權限…</section>
+    <div id="workspace" hidden>
+      <div class="heading"><div><p class="eyebrow">FIRESIDE · ADMINISTRATION</p><h1>管理工作台</h1><p>維護卡牌、設定商城金幣售價，查詢玩家的購買紀錄。</p></div><span id="admin-name" class="badge"></span></div>
+      <nav class="tabs" aria-label="後台功能"><button data-tab="cards" aria-pressed="true">卡牌管理</button><button data-tab="products" aria-pressed="false">商品與價格</button><button data-tab="orders" aria-pressed="false">玩家交易</button></nav>
+      <p id="notice" role="status" aria-live="polite"></p>
+      <section id="catalog-panel" class="panel">
+        <div class="panel-heading"><div><h2 id="list-title">卡牌管理</h2><p id="list-help">草稿可先保存，上架後才會顯示於卡牌庫。</p></div><button id="create" class="primary">＋ 建立卡牌</button></div>
+        <div class="filters"><label>搜尋名稱或 ID<input id="search" type="search" placeholder="輸入關鍵字"></label><label>狀態<select id="status"><option value="">全部狀態</option><option value="active">已上架</option><option value="draft">草稿</option><option value="archived">已下架</option></select></label><button id="reload">重新載入</button></div>
+        <p id="count"></p><div class="table-wrap"><table><thead id="catalog-head"></thead><tbody id="catalog-body"></tbody></table></div><p id="catalog-empty" hidden>沒有符合條件的資料。</p>
+      </section>
+      <section id="orders-panel" class="panel" hidden>
+        <h2>玩家交易查詢</h2><p class="muted">依購買時保存的玩家與商品資料查詢；修改現售價格不會影響歷史訂單。</p>
+        <form id="order-search" class="filters"><label>玩家 ID、名稱或 Email<input name="player" maxlength="254" placeholder="例：玩家名稱或 Email"></label><label>開始日期<input name="from" type="date"></label><label>結束日期<input name="to" type="date"></label><label>訂單狀態<select name="status"><option value="">全部狀態</option><option value="pending">處理中</option><option value="completed">已完成</option><option value="cancelled">已取消</option><option value="refunded">已退款</option></select></label><button class="primary">查詢</button></form>
+        <p id="order-summary" role="status"></p><div class="table-wrap"><table><thead><tr><th>訂單／時間</th><th>玩家</th><th>商品</th><th>數量</th><th>成交金額</th><th>狀態</th></tr></thead><tbody id="orders-body"></tbody></table></div>
+        <p id="orders-empty" hidden>沒有符合條件的交易。商城尚未開放購買，目前不會產生購買紀錄。</p><div class="pagination"><button id="prev">上一頁</button><span id="page"></span><button id="next">下一頁</button></div>
+      </section>
+    </div>
+  </main>
+  <dialog id="editor" aria-labelledby="editor-title"><form id="edit-form">
+    <div class="panel-heading"><h2 id="editor-title">建立卡牌</h2><button type="button" id="close" aria-label="關閉編輯">✕</button></div>
+    <p class="muted">標示 * 的欄位為必填。ID 建立後不可修改；下架會保留資料及歷史紀錄。</p>
+    <div class="form-grid"><label>ID *<input name="id" required pattern="[a-zA-Z0-9_-]{1,64}" maxlength="64"></label><label>狀態<select name="status"><option value="draft">草稿</option><option value="active">上架</option><option value="archived">下架</option></select></label><label class="wide">名稱 *<input name="name" required maxlength="100"></label></div>
+    <div id="card-fields">
+      <div class="form-grid"><label>副標題<input name="subtitle" maxlength="200"></label><label>系列 *<input name="collection" maxlength="80" list="collection-options"><datalist id="collection-options"></datalist></label><label class="wide">圖片網址或專案圖片路徑 *<input name="image" maxlength="1000" placeholder="cards-clean-layout-31/example.webp 或 https://…"></label><label>法力 *<input name="mana" type="number" min="0" max="999" step="1"></label><label>攻擊 *<input name="attack" type="number" min="0" max="999" step="1"></label><label>生命 *<input name="health" type="number" min="0" max="999" step="1"></label></div>
+      <h3>技能與規則</h3><div id="abilities"></div><button type="button" id="add-ability">＋ 新增技能</button>
+      <details><summary>外語翻譯（選填）</summary><p>選擇語言編輯名稱與技能。名稱留空會移除該語言翻譯，前台改用繁體中文。</p><label>編輯語言<select id="translation-language"><option value="en">English</option><option value="ja">日本語</option><option value="ko">한국어</option></select></label><div class="form-grid"><label>翻譯名稱<input name="translatedName" maxlength="100"></label><label>翻譯副標題<input name="translatedSubtitle" maxlength="200"></label></div><div id="translated-abilities"></div><button type="button" id="add-translated-ability">＋ 新增翻譯技能</button></details>
+    </div>
+    <div id="product-fields" hidden><label>金幣售價 *<input name="coinPrice" type="number" min="0" max="100000000" step="1"></label><fieldset><legend>包含卡牌（至少選一張，最多 20 張）</legend><div id="product-cards" class="card-options"></div></fieldset><p class="muted">上架商品只能包含已上架卡牌。卡牌下架後，包含該卡的商品也會從商城隱藏。</p></div>
+    <p id="form-error" role="alert"></p><div class="editor-actions"><button type="button" id="cancel">取消</button><button class="primary" id="save">儲存</button></div>
+  </form></dialog>
+</body></html>

@@ -1,9 +1,5 @@
-// 卡包商城：示意用途，不含真實金流。
-// 三個組合包，各含 2 張卡牌，基準售價 NT$30；售價依訪客地區（GeoIP）
-// 或手動切換的語言自動換算幣別。文字沿用 i18n.js 的 labels（shop 開頭的鍵），
-// 卡牌名稱／圖片／能力文字沿用 cards-data.js + translations-data.js 既有資料，
-// 不重複維護；詳情彈出視窗重用 card-artwork.js 的 artwork()（同為非模組化 script，
-// 會掛在 window 上），版面比照卡牌詳情彈出視窗。
+// 商城由 D1 catalog 提供商品與金幣價格。購買尚未開放，不產生假交易。
+// 詳情与縮圖共用 card-artwork.js 的卡牌文字排版。
 'use strict';
 (() => {
   const $ = id => document.getElementById(id);
@@ -11,42 +7,14 @@
   const t = key => I18n.t(key);
   const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 
-  // 三個組合包：id 僅供內部識別（購物車按鈕、詳情彈窗共用），
-  // cardIds 對應 cards-data.js 裡的卡牌 id。
-  const BUNDLES = [
-    { id: 'deepsea-duo', cardIds: ['25', '13'] },  // 克蘇魯、魚人潮汐祭司
-    { id: 'wildland-duo', cardIds: ['08', '11'] }, // 鹿角部族薩滿、空心樹人
-    { id: 'inferno-duo', cardIds: ['29', '18'] },  // 地獄火巨人、灰燼獵犬
-  ];
+  // cardIds 對應資料庫卡牌；只顯示已上架且卡牌完整的商品。
+  let BUNDLES = [];
 
-  // 幣別對照表：每包固定售價 NT$30，這裡是對應各幣別的「顯示金額」
-  // （為題目指定的固定展示值，不是即時匯率換算）。
-  const CURRENCY = {
-    TWD: { amount: 30, symbol: 'NT$' },
-    USD: { amount: 1, symbol: '$' },
-    JPY: { amount: 145, symbol: '¥' },
-    KRW: { amount: 1230, symbol: '₩' },
-  };
-
-  // 使用者手動切換語言時，以此表決定顯示幣別。
-  const LANGUAGE_CURRENCY = { 'zh-TW': 'TWD', en: 'USD', ja: 'JPY', ko: 'KRW' };
-
-  // GeoIP 偵測到的國別代碼 → 幣別；未列出的地區（含台灣）維持預設台幣。
-  const COUNTRY_CURRENCY = { US: 'USD', KR: 'KRW', JP: 'JPY' };
-
-  const state = { currency: LANGUAGE_CURRENCY[I18n.language] || 'TWD' };
-  let manualOverride = false; // 使用者手動切換過語言後，GeoIP 的結果就不再覆蓋顯示幣別
-  // 已儲存的語言選擇優先於 IP 地區，重新整理也沿用。
-  try { manualOverride = I18n.supported.includes(localStorage.getItem('fireside-language')); } catch {}
   let openBundleId = null;    // 目前開啟中的組合包詳情彈窗（供語言切換／幣別更新時重新渲染）
   let shopDetailOpener = null; // 開啟詳情彈窗的按鈕，關閉時把焦點還給它
 
-  function formatPrice(currencyCode) {
-    const c = CURRENCY[currencyCode] || CURRENCY.TWD;
-    let amount;
-    try { amount = c.amount.toLocaleString(I18n.language); }
-    catch { amount = String(c.amount); }
-    return `${c.symbol}${amount}`;
+  function formatPrice(bundle) {
+    return `${bundle.coinPrice.toLocaleString(I18n.language)} ${t('coins')}`;
   }
 
   function bundleCards(bundle) {
@@ -61,7 +29,7 @@
     if (!grid || !window.CARDS) return;
     grid.innerHTML = BUNDLES.map(bundle => {
       const cards = bundleCards(bundle);
-      const title = cards.map(c => c.name).join(' × ');
+      const title = bundle.name || cards.map(c => c.name).join(' × ');
       const thumbs = cards.map(card => window.artwork(card)).join('');
       return `<article class="shop-card">
         <button class="shop-card-open" type="button" data-bundle="${escapeHTML(bundle.id)}" aria-label="${escapeHTML(t('view'))} ${escapeHTML(title)}">
@@ -70,8 +38,8 @@
           <p class="shop-card-desc">${escapeHTML(t('shopBundle'))}</p>
         </button>
         <div class="shop-card-footer">
-          <span class="shop-price">${formatPrice(state.currency)}</span>
-          <button class="gold-button shop-buy" data-bundle="${escapeHTML(bundle.id)}" type="button">${escapeHTML(t('shopBuy'))}</button>
+          <span class="shop-price">${formatPrice(bundle)}</span>
+          <button class="gold-button shop-buy" disabled data-bundle="${escapeHTML(bundle.id)}" type="button">${escapeHTML(t('shopBuy'))}</button>
         </div>
       </article>`;
     }).join('');
@@ -104,7 +72,7 @@
     if (!cards.length) return;
     openBundleId = bundleId;
     if (opener) shopDetailOpener = opener;
-    const title = cards.map(c => c.name).join(' × ');
+    const title = bundle.name || cards.map(c => c.name).join(' × ');
     $('shop-detail-content').innerHTML = `
       <div class="shop-detail-header">
         <p class="collection">${escapeHTML(t('shopBundle'))}</p>
@@ -112,8 +80,8 @@
       </div>
       <div class="shop-detail-cards">${cards.map(cardDetailBlock).join('')}</div>
       <div class="shop-detail-footer">
-        <span class="shop-price">${formatPrice(state.currency)}</span>
-        <button class="gold-button shop-buy" data-bundle="${escapeHTML(bundle.id)}" type="button">${escapeHTML(t('shopBuy'))}</button>
+        <span class="shop-price">${formatPrice(bundle)}</span>
+        <button class="gold-button shop-buy" disabled data-bundle="${escapeHTML(bundle.id)}" type="button">${escapeHTML(t('shopBuy'))}</button>
       </div>`;
     if (!$('shop-detail').open) $('shop-detail').showModal();
     window.CardTextFit.schedule($('shop-detail-content'));
@@ -148,23 +116,6 @@
     if (openBundleId && $('shop-detail').open) openShopDetail(openBundleId);
   }
 
-  // 依訪客 IP 偵測地區，設定初始顯示幣別。失敗（離線、被封鎖、超過每日額度等）
-  // 時安靜地維持預設台幣，不影響網站其他功能。
-  async function detectCurrencyByGeoIP() {
-    try {
-      const response = await fetch('https://ipwho.is/', { cache: 'no-store' });
-      if (!response.ok) throw new Error(`GeoIP request failed: ${response.status}`);
-      const data = await response.json();
-      if (manualOverride) return; // 使用者在等待回應的同時已手動切換語言，尊重使用者的選擇
-      if (data && data.success !== false && data.country_code) {
-        state.currency = COUNTRY_CURRENCY[data.country_code] || 'TWD';
-        render();
-        if (openBundleId && $('shop-detail').open) openShopDetail(openBundleId);
-      }
-    } catch (error) {
-      console.warn('[shop] GeoIP currency detection skipped:', error);
-    }
-  }
 
   if ($('shop-grid')) {
     $('shop-grid').addEventListener('click', event => {
@@ -201,12 +152,14 @@
   if ($('language')) {
     $('language').addEventListener('change', () => {
       I18n.setLanguage($('language').value);
-      manualOverride = true;
-      state.currency = LANGUAGE_CURRENCY[$('language').value] || 'TWD';
       applyShopUI();
     });
   }
 
   applyShopUI();
-  if (!manualOverride) detectCurrencyByGeoIP();
+  document.addEventListener('fireside-catalog-ready', () => {
+    BUNDLES = window.FiresideCatalog.products;
+    if (openBundleId && !BUNDLES.some(b=>b.id===openBundleId)) $('shop-detail').close();
+    applyShopUI();
+  });
 })();

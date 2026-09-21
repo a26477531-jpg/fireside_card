@@ -74,6 +74,12 @@ $('language').addEventListener('change',() => {
 });
 I18n.applyUI();
 render();
+document.addEventListener('fireside-catalog-ready', () => {
+  const collections = [...new Set(window.CARDS.map(c=>c.collection))];
+  for (const collection of collections) if (![...$('set').options].some(o=>o.value===collection)) $('set').add(new Option(collection,collection));
+  state.page=1;render();
+  window.PromotionCarousel?.refresh();
+});
 
 // 卡牌載入動畫：卡牌其實是同步組裝好的，這裡刻意讓動畫至少停留一小段時間再切換，
 // 避免動畫一閃而過；時間到（或裝置偏好減少動態效果時）就立刻切到卡牌畫面。

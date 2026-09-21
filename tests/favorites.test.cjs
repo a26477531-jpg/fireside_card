@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 test('favorites require authentication and scope all operations to session user', async()=>{
   const api = await import('../functions/api/favorites.js');
   const calls=[];
-  const DB={prepare(sql){return {bind(...args){calls.push({sql,args});return {all:async()=>({results:[{card_id:'01'}]}),run:async()=>({success:true})};}};}};
+  const DB={prepare(sql){return {bind(...args){calls.push({sql,args});return {first:async()=>args[0]==='01'?{id:'01'}:null,all:async()=>({results:[{card_id:'01'}]}),run:async()=>({success:true})};}};}};
   const denied=await api.onRequestGet[0]({request:new Request('https://cards.test/api/favorites'),env:{DB},data:{}});
   assert.equal(denied.status,401); assert.equal(calls.length,0);
   const context={env:{DB},data:{user:{id:7}},request:new Request('https://cards.test/api/favorites',{method:'PUT',headers:{Origin:'https://cards.test'},body:JSON.stringify({cardId:'01',userId:99})})};
