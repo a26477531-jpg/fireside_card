@@ -103,6 +103,26 @@
     toast._hideTimer = setTimeout(() => toast.classList.remove('is-visible'), 2200);
   }
 
+  // 金幣加值面板：登入時顯示目前餘額＋三個加值按鈕，未登入時顯示「請先登入」提示。
+  function applyTopupPanel() {
+    const user = window.FiresideAccount && window.FiresideAccount.user;
+    const panel = $('topup-panel');
+    const loginHint = $('topup-login-hint');
+    if (!panel || !loginHint) return;
+    panel.hidden = !user;
+    loginHint.hidden = Boolean(user);
+    if (user) {
+      if ($('topup-balance-label')) $('topup-balance-label').textContent = `${t('coinBalanceLabel')}：${Number(user.coinBalance || 0).toLocaleString(I18n.language)} ${t('coins')}`;
+      if ($('topup-panel-intro')) $('topup-panel-intro').textContent = t('topupPanelIntro');
+      for (const button of panel.querySelectorAll('.topup-option')) {
+        button.textContent = t('topupOptionLabel')(button.dataset.amount);
+      }
+    } else {
+      if ($('topup-login-hint-text')) $('topup-login-hint-text').textContent = t('topupLoginRequired') + ' ';
+      if ($('topup-login-hint-link')) $('topup-login-hint-link').textContent = t('topupGoLogin');
+    }
+  }
+
   function applyShopUI() {
     I18n.applyUI();
     document.title = `${t('shop')} | ${t('brand')}`;
@@ -112,9 +132,20 @@
     if (heading) heading.textContent = t('shop');
     if ($('shop-intro')) $('shop-intro').textContent = t('shopIntro');
     if ($('close-shop-detail')) $('close-shop-detail').setAttribute('aria-label', t('shopClose'));
+    applyTopupPanel();
     render();
     if (openBundleId && $('shop-detail').open) openShopDetail(openBundleId);
   }
+
+  if ($('topup-panel')) {
+    $('topup-panel').addEventListener('click', event => {
+      const button = event.target.closest('.topup-option');
+      if (button) window.location.href = `topup.html?amount=${encodeURIComponent(button.dataset.amount)}`;
+    });
+  }
+
+  document.addEventListener('fireside-account-ready', applyTopupPanel);
+  document.addEventListener('fireside-coins-updated', applyTopupPanel);
 
 
   if ($('shop-grid')) {

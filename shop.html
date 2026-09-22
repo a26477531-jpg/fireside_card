@@ -104,6 +104,44 @@
                 class="shop-intro"
             ></p>
 
+            <!-- =========================
+                 金幣加值面板
+                 示意用加值功能：登入後顯示目前金幣餘額與三個固定金額的加值按鈕，
+                 點擊後會前往 topup.html 的模擬扣款頁面，不含真實金流。
+            ========================== -->
+            <div
+                id="topup-panel"
+                class="topup-panel"
+                hidden
+            >
+
+                <p
+                    id="topup-balance-label"
+                    class="topup-balance"
+                ></p>
+
+                <p
+                    id="topup-panel-intro"
+                    class="topup-panel-intro"
+                ></p>
+
+                <div class="topup-options">
+                    <button class="gold-button topup-option" type="button" data-amount="50">+50</button>
+                    <button class="gold-button topup-option" type="button" data-amount="100">+100</button>
+                    <button class="gold-button topup-option" type="button" data-amount="150">+150</button>
+                </div>
+
+            </div>
+
+            <div
+                id="topup-login-hint"
+                class="topup-login-hint"
+                hidden
+            >
+                <span id="topup-login-hint-text"></span>
+                <a id="topup-login-hint-link" href="login.html"></a>
+            </div>
+
             <div
                 id="shop-grid"
                 class="shop-grid"

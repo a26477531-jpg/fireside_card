@@ -1899,3 +1899,148 @@ dialog::backdrop {
   .navbar nav a, .navbar nav a:last-child { display: flex; flex: 0 0 auto; height: auto; min-height: 44px; align-items: center; white-space: nowrap; padding: 6px 12px; }
   .navbar .nav-account { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
 }
+
+/* =========================================================
+   金幣購買系統：導覽列金幣餘額、商城加值面板、模擬扣款頁面
+   ========================================================= */
+
+/* 導覽列上的金幣餘額徽章 */
+.nav-coins {
+    color: #f5d388;
+    cursor: pointer;
+}
+
+.nav-coins:before {
+    content: none;
+}
+
+/* 商城頁的加值面板 */
+.topup-panel {
+    max-width: 640px;
+    margin: 0 auto 34px;
+    padding: 20px 24px;
+    background: linear-gradient(180deg,#fff8e2,#f1e2b8);
+    border: 1px solid #b59a64;
+    border-radius: 10px;
+    box-shadow: 0 6px 18px #67502922;
+    text-align: center;
+}
+
+.topup-balance {
+    margin: 0 0 6px;
+    font: 700 18px var(--serif);
+    color: #8a5a1f;
+}
+
+.topup-panel-intro {
+    margin: 0 0 16px;
+    font-size: 13px;
+    color: #6b5738;
+    line-height: 1.6;
+}
+
+.topup-options {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.topup-option {
+    font-size: 14px;
+    padding: 10px 22px;
+}
+
+.topup-login-hint {
+    max-width: 640px;
+    margin: 0 auto 34px;
+    padding: 16px 24px;
+    text-align: center;
+    font-size: 13px;
+    color: #6b5738;
+    background: #fff8e288;
+    border: 1px dashed #b59a64;
+    border-radius: 10px;
+}
+
+.topup-login-hint a {
+    color: #8a5f2c;
+    font-weight: bold;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.topup-login-hint a:hover {
+    color: #f5d388;
+}
+
+/* 模擬扣款頁面 */
+.topup-card {
+    max-width: 460px;
+}
+
+.topup-amount-summary {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 0 0 22px;
+    padding: 12px 16px;
+    background: #fff8e288;
+    border: 1px dashed #b59a64;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #6b5738;
+}
+
+.topup-amount-summary strong {
+    font: 700 20px var(--serif);
+    color: #8a5a1f;
+}
+
+.topup-field-row {
+    display: flex;
+    gap: 16px;
+}
+
+.topup-field-row .field {
+    flex: 1;
+    min-width: 0;
+}
+
+/* 唯讀示意欄位：跟一般可編輯欄位視覺上區分開，讓人一看就知道不能填寫 */
+.topup .field input[readonly] {
+    background: #ece2c7;
+    color: #7a6642;
+    cursor: not-allowed;
+}
+
+.topup .field input[readonly]:focus {
+    outline: none;
+}
+
+.topup-mock-notice {
+    text-align: center;
+    font-size: 12px;
+    color: #8a7550;
+    margin: 4px 0 18px;
+}
+
+/* 「扣款」按鈕靠右下角放置 */
+.topup-confirm-row {
+    display: flex;
+    justify-content: flex-end;
+}
+
+#topup-confirm {
+    font-size: 15px;
+    padding: 12px 30px;
+}
+
+#topup-confirm:disabled {
+    opacity: .6;
+    cursor: default;
+}
+
+@media (max-width: 480px) {
+  .topup-field-row { flex-direction: column; gap: 0; }
+}

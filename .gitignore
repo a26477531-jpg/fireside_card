@@ -3,3 +3,6 @@
 
 # 如果之後有安裝任何 npm 套件（例如全域裝 wrangler 以外的東西）。
 node_modules/
+
+# D1 資料庫備份檔，不要進版控
+*.sql
