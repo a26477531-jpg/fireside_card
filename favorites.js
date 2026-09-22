@@ -31,6 +31,7 @@
       if (!data.ok || !Array.isArray(data.cardIds)) throw new Error();
       if (version !== generation) return;
       ids = new Set(data.cardIds); ready = true;
+      if(new URLSearchParams(location.search).get('favorites')==='1')checkbox.checked=true;
     } catch { if(version === generation) status.textContent = text(4); }
     if(version === generation) { sync(); render(); }
   }

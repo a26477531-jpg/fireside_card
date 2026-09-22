@@ -7,7 +7,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
 (async()=>{
   const {DB,sqlite}=database();
   const routes={};
-  for(const name of ['admin/cards','admin/products','admin/orders','catalog','me','favorites'])routes['/api/'+name]=await import('../functions/api/'+name+'.js');
+  for(const name of ['admin/cards','admin/products','admin/orders','catalog','me','favorites','purchases','my-cards'])routes['/api/'+name]=await import('../functions/api/'+name+'.js');
   const root=path.resolve(__dirname,'..');
   const types={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.webp':'image/webp'};
   const server=http.createServer(async(req,res)=>{
@@ -45,24 +45,59 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     await form.locator('[name="id"]').fill('browser-product');await form.locator('[name="name"]').fill('測試金幣商品');await form.locator('[name="status"]').selectOption('active');await form.locator('[name="coinPrice"]').fill('88');await page.locator('#product-cards input[value="browser-card"]').check();await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
     await page.locator('[data-edit="browser-product"]').click();await form.locator('[name="coinPrice"]').fill('99');await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
     await page.locator('[data-tab="orders"]').click();await page.locator('#orders-empty').waitFor();assert.match(await page.locator('#order-summary').textContent(),/0/);
-    sqlite.exec("INSERT INTO purchase_orders VALUES ('browser-order',2,'member','member@example.test','browser-product','交易當時名稱','COIN',88,1,88,'completed','2026-09-21T10:00:00.000Z');");
+    sqlite.exec("INSERT INTO purchase_orders(id,user_id,player_username,player_email,product_id,product_name,currency,unit_price,quantity,total,status,created_at) VALUES ('browser-order',2,'member','member@example.test','browser-product','交易當時名稱','COIN',88,1,88,'completed','2026-09-21T10:00:00.000Z');");
     await page.locator('#order-search [name="player"]').fill('member');await page.locator('#order-search button').click();await page.waitForFunction(()=>document.querySelectorAll('#orders-body tr').length===1);assert.match(await page.locator('#orders-body').textContent(),/88 金幣/);
     await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     await page.locator('[data-tab="cards"]').click();await page.locator('#search').fill('');
     if(process.env.ADMIN_SCREENSHOT)await page.screenshot({path:process.env.ADMIN_SCREENSHOT});
     if(process.env.ADMIN_DESKTOP_SCREENSHOT){await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:process.env.ADMIN_DESKTOP_SCREENSHOT});}
     await page.goto(base+'/shop.html');await page.waitForFunction(()=>document.querySelectorAll('.shop-card').length===4);assert.match(await page.locator('.shop-card').filter({hasText:'測試金幣商品'}).textContent(),/99 金幣/);
-    assert.ok(await page.locator('.shop-buy').first().isDisabled());
+    assert.ok(await page.locator('.shop-buy').first().isEnabled());
     await page.goto(base+'/index.html');await page.waitForFunction(()=>window.CARDS.some(c=>c.id==='browser-card'));await page.locator('#search').fill('修改後的卡牌');assert.equal(await page.locator('#cards .card').count(),1);
     await page.locator('#cards .card').click();await page.waitForFunction(()=>!document.querySelector('#favorite-control button').disabled);await page.locator('#favorite-control button').click();await page.waitForFunction(()=>document.querySelector('#favorite-control button').getAttribute('aria-pressed')==='true');
     await page.goto(base+'/admin.html');await page.waitForFunction(()=>document.querySelectorAll('#catalog-body tr').length===32);await page.locator('[data-edit="browser-card"]').click();await form.locator('[name="status"]').selectOption('archived');await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
     await page.goto(base+'/shop.html');await page.waitForFunction(()=>window.FiresideCatalog.state==='ready');assert.equal(await page.locator('.shop-card').count(),3);
     await context.clearCookies();await context.addCookies([{name:'fireside_session',value:'user-session',url:base}]);await page.goto(base+'/admin.html');await page.waitForFunction(()=>document.querySelector('#access').textContent.includes('沒有管理權限'));assert.ok(await page.locator('#workspace').isHidden());
     await page.goto(base+'/index.html');await page.waitForFunction(()=>window.FiresideAccount?.user?.username==='member');assert.equal(await page.locator('#nav-admin').count(),0);
+    await page.goto(base+'/shop.html');await page.waitForFunction(()=>window.FiresideAccount?.user?.username==='member');
+    await page.locator('.shop-buy[data-bundle="deepsea-duo"]').click();
+    await page.getByRole('button',{name:'確認購買',exact:true}).click();
+    await page.getByText('購買成功！卡牌已加入「我的卡片」。',{exact:true}).waitFor();
+    assert.equal(sqlite.prepare('SELECT coin_balance FROM users WHERE id=2').get().coin_balance,30);
+    await page.locator('.purchase-confirm a').click();await page.locator('.owned-card').first().waitFor();
+    assert.equal(await page.locator('.owned-card').count(),2);
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    await page.locator('.owned-favorite[data-card="25"]').click();
+    await page.waitForFunction(()=>document.querySelector('.owned-favorite[data-card="25"]').getAttribute('aria-pressed')==='true');
+    await page.locator('#nav-wishlist').click();await page.waitForFunction(()=>document.querySelector('#favorites-only').checked);
+    assert.equal(await page.locator('#cards .card').count(),1);
+    await page.locator('#nav-my-cards').click();await page.locator('.owned-card').first().waitFor();
+    await page.locator('.owned-favorite[data-card="25"]').click();
+    await page.waitForFunction(()=>document.querySelector('.owned-favorite[data-card="25"]').getAttribute('aria-pressed')==='false');
+    assert.equal(await page.locator('.owned-card').count(),2);
+    for(const lang of ['en','ja','ko','zh-TW']){await page.selectOption('#language',lang);assert.equal(await page.locator('.owned-card').count(),2);}
+    if(process.env.OWNED_SCREENSHOT)await page.screenshot({path:process.env.OWNED_SCREENSHOT,fullPage:true});
+    await page.goto(base+'/shop.html');await page.waitForFunction(()=>window.FiresideAccount?.user?.username==='member');
+    await page.locator('.shop-buy[data-bundle="deepsea-duo"]').click();
+    await page.getByRole('button',{name:'取消',exact:true}).click();
+    assert.equal(sqlite.prepare('SELECT coin_balance FROM users WHERE id=2').get().coin_balance,30);
+    // The server commits but the response is lost: retry must reuse the key.
+    await page.route('**/api/purchases',async route=>{await route.fetch();await route.abort();},{times:1});
+    await page.locator('.shop-buy[data-bundle="deepsea-duo"]').click();
+    await page.getByRole('button',{name:'確認購買',exact:true}).click();
+    await page.getByText('未能確認購買結果，請重試同一筆購買；系統不會重複扣款。',{exact:true}).waitFor();
+    await page.getByRole('button',{name:'確認購買',exact:true}).click();
+    await page.getByText('購買成功！卡牌已加入「我的卡片」。',{exact:true}).waitFor();
+    assert.equal(sqlite.prepare('SELECT coin_balance FROM users WHERE id=2').get().coin_balance,0);
+    assert.equal(sqlite.prepare("SELECT quantity FROM user_cards WHERE user_id=2 AND card_id='25'").get().quantity,2);
+    await page.getByRole('button',{name:'取消',exact:true}).click();
+    await page.locator('.shop-buy[data-bundle="deepsea-duo"]').click();await page.getByRole('button',{name:'確認購買',exact:true}).click();
+    await page.getByText('金幣不足，請先加值。',{exact:true}).waitFor();
+    await page.getByRole('button',{name:'取消',exact:true}).click();
     sqlite.exec('DROP TABLE catalog_cards; DROP TABLE catalog_products;');
     await page.goto(base+'/index.html');await page.waitForFunction(()=>window.FiresideCatalog.state==='ready');assert.equal(await page.evaluate(()=>window.CARDS.length),31);assert.equal(await page.locator('#cards .card').count(),15);
     await page.goto(base+'/shop.html');await page.waitForFunction(()=>window.FiresideCatalog.state==='ready');assert.equal(await page.locator('.shop-card').count(),3);
     assert.deepEqual(errors,[]);
-    console.log('PASS admin UI -> real handlers -> SQLite: create/edit cards, product coin price, transaction snapshots/search, mobile layout, storefront sync, dynamic favorites, archive and member denial.');
+    console.log('PASS browser -> real handlers -> SQLite: admin catalog, purchases, cancelled checkout, lost response retry, insufficient balance, ownership, wishlist, mobile, four languages and permissions.');
   }finally{await browser.close();await new Promise(resolve=>server.close(resolve));sqlite.close();}
 })().catch(e=>{console.error(e);process.exit(1);});

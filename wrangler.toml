@@ -25,3 +25,9 @@ compatibility_flags = ["nodejs_compat"]
 binding = "DB"
 database_name = "fireside-cards-db"
 database_id = "a2e8b949-42c0-48fe-b8fc-a2a3fb7b57c8"
+
+# Pages preview deployments (including staging) use an isolated database.
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "fireside-cards-staging-db"
+database_id = "cb87a9e5-0098-4d80-9696-41374d847ce4"
