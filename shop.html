@@ -11,8 +11,10 @@
     <script src="translations-data.js" defer></script>
     <script src="i18n.js?v=admin-catalog-1" defer></script>
     <script src="catalog-client.js?v=2" defer></script>
-    <script src="card-text-fit.js" defer></script>
-    <script src="card-artwork.js" defer></script>
+    <link rel="stylesheet" href="card-template.css?v=2">
+    <script src="card-template.js?v=2" defer></script>
+    <script src="card-text-fit.js?v=template-1" defer></script>
+    <script src="card-artwork.js?v=template-1" defer></script>
     <script src="shop.js?v=admin-catalog-1" defer></script>
     <script src="account.js?v=admin-1" defer></script>
 </head>
@@ -101,6 +103,44 @@
                 id="shop-intro"
                 class="shop-intro"
             ></p>
+
+            <!-- =========================
+                 金幣加值面板
+                 示意用加值功能：登入後顯示目前金幣餘額與三個固定金額的加值按鈕，
+                 點擊後會前往 topup.html 的模擬扣款頁面，不含真實金流。
+            ========================== -->
+            <div
+                id="topup-panel"
+                class="topup-panel"
+                hidden
+            >
+
+                <p
+                    id="topup-balance-label"
+                    class="topup-balance"
+                ></p>
+
+                <p
+                    id="topup-panel-intro"
+                    class="topup-panel-intro"
+                ></p>
+
+                <div class="topup-options">
+                    <button class="gold-button topup-option" type="button" data-amount="50">+50</button>
+                    <button class="gold-button topup-option" type="button" data-amount="100">+100</button>
+                    <button class="gold-button topup-option" type="button" data-amount="150">+150</button>
+                </div>
+
+            </div>
+
+            <div
+                id="topup-login-hint"
+                class="topup-login-hint"
+                hidden
+            >
+                <span id="topup-login-hint-text"></span>
+                <a id="topup-login-hint-link" href="login.html"></a>
+            </div>
 
             <div
                 id="shop-grid"

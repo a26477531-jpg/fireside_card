@@ -2,6 +2,7 @@
 // 依 session cookie 回報目前登入中的使用者（若有）。日後「個人收藏卡片」頁面
 // 會用這支 API 確認「現在是誰在看」，這裡先預備好，註冊頁面完成後也會用它
 // 顯示「已經是 xxx，要用這個帳號繼續嗎？」之類的狀態。
+// 同時回傳 coinBalance（金幣餘額），供導覽列／商城顯示目前金幣數量用。
 import { readCookie, json, SESSION_COOKIE_NAME } from '../_lib/http.js';
 
 export async function onRequestGet({ request, env }) {
@@ -10,7 +11,7 @@ export async function onRequestGet({ request, env }) {
 
   const row = await env.DB
     .prepare(
-      `SELECT users.id AS id, users.email AS email, users.username AS username, users.role AS role
+      `SELECT users.id AS id, users.email AS email, users.username AS username, users.role AS role, users.coin_balance AS coinBalance
        FROM sessions
        JOIN users ON users.id = sessions.user_id
        WHERE sessions.token = ?1 AND sessions.expires_at > ?2

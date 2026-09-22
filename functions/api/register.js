@@ -68,8 +68,10 @@ export async function onRequestPost({ request, env }) {
     .bind(token, userId, expiresAt)
     .run();
 
+  // coinBalance 直接寫死 60：資料庫欄位的 DEFAULT 60 已經保證新帳號一定是這個數字，
+  // 這裡不用多查一次資料庫。
   return json(
-    { ok: true, user: { id: userId, email, username } },
+    { ok: true, user: { id: userId, email, username, coinBalance: 60 } },
     { status: 201, headers: { 'Set-Cookie': sessionCookie(token) } }
   );
 }

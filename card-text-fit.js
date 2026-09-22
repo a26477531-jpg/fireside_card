@@ -1,4 +1,4 @@
-// Fit translated text inside the existing, individually calibrated card regions.
+// Fit translated text and numbers inside the card's fixed regions.
 // Start at the CSS font size and reduce only cards whose text actually overflows.
 (() => {
   const pending = new Set();
@@ -22,8 +22,10 @@
     for(const art of root.querySelectorAll('.card-art')) {
       const name=art.querySelector('.card-name'),rules=art.querySelector('.card-ability');
       if(!name || !rules || !name.getBoundingClientRect().width)continue;
-      for(const box of [name,rules]) {
-        box.style.removeProperty('font-size');
+      for(const box of [name,rules,...art.querySelectorAll('.card-stat')]) {
+        if(!box.dataset.baseFont && box.style.fontSize)box.dataset.baseFont=box.style.fontSize;
+        if(box.dataset.baseFont)box.style.fontSize=box.dataset.baseFont;
+        else box.style.removeProperty('font-size');
         const start=parseFloat(getComputedStyle(box).fontSize);
         const okay=()=>{
           if(box===rules)return rulesFit(box);

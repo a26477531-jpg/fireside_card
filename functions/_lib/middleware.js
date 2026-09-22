@@ -6,8 +6,8 @@
 import { readCookie, json, SESSION_COOKIE_NAME } from './http.js';
 import { hasPermission } from './permissions.js';
 
-// 確認「現在是誰在呼叫」，並把使用者資料（含 role）放進 context.data.user
-// 給後面的 requirePermission、以及最終的 API handler 使用。
+// 確認「現在是誰在呼叫」，並把使用者資料（含 role、coinBalance）放進
+// context.data.user 給後面的 requirePermission、以及最終的 API handler 使用。
 // 沒登入（沒 cookie／session 不存在或過期）一律回 401。
 export async function authenticate(context) {
   const { request, env, next, data } = context;
@@ -16,7 +16,7 @@ export async function authenticate(context) {
 
   const user = await env.DB
     .prepare(
-      `SELECT users.id AS id, users.email AS email, users.username AS username, users.role AS role
+      `SELECT users.id AS id, users.email AS email, users.username AS username, users.role AS role, users.coin_balance AS coinBalance
        FROM sessions
        JOIN users ON users.id = sessions.user_id
        WHERE sessions.token = ?1 AND sessions.expires_at > ?2
@@ -27,7 +27,7 @@ export async function authenticate(context) {
 
   if (!user) return json({ ok: false, error: 'unauthenticated' }, { status: 401 });
 
-  data.user = user; // role 是從資料庫查出來的，不是前端傳來的
+  data.user = user; // role／coinBalance 都是從資料庫查出來的，不是前端傳來的
   return next();
 }
 
