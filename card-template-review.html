@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>統一卡牌範本預覽</title>
+<link rel="stylesheet" href="index.css">
+<link rel="stylesheet" href="card-template.css?v=2">
+<style>
+body{padding:24px;background:#eee4c9;color:#302616}header{margin-bottom:24px}h1{font-size:24px}label{display:inline-block;margin:12px 20px 12px 0}#preview{display:flex;flex-wrap:wrap;gap:24px;align-items:start}.sample{width:var(--preview-width,300px);max-width:100%}.sample p{margin:4px 0;font-size:14px}.guides [data-region]{outline:1px dashed #ffcf36;background:#ffcc0012}select,input{font:inherit}header p{max-width:850px}
+</style>
+</head>
+<body>
+<header>
+<h1>31 張卡牌・統一範本預覽</h1>
+<p>這是獨立的排版檢查頁，首頁與商城仍維持原本網站版型。可切換語言、尺寸與定位框，檢查數值和規則的位置。</p>
+<p><a href="index.html">返回原本網站</a> · <a href="shop.html">前往商城</a></p>
+<label>語言 <select id="locale"><option value="zh-TW">繁體中文</option><option value="en">English</option><option value="ja">日本語</option><option value="ko">한국어</option></select></label>
+<label>卡片寬度 <input id="width" type="range" min="84" max="450" value="300"> <output id="size">300 px</output></label>
+<label><input id="guides" type="checkbox"> 顯示固定區域</label>
+<label><input id="stress" type="checkbox"> 測試三位數（999）</label>
+</header>
+<main id="preview"></main>
+<script src="cards-data.js"></script>
+<script src="translations-data.js"></script>
+<script src="i18n.js"></script>
+<script src="card-template.js?v=2"></script>
+<script src="card-artwork.js"></script>
+<script src="card-text-fit.js"></script>
+<script>
+function renderPreview(){
+  CardI18n.setLanguage(document.querySelector('#locale').value);
+  document.querySelector('#preview').innerHTML=CARDS.map(source=>{
+    const card=CardI18n.card(source);
+    if(document.querySelector('#stress').checked)Object.assign(card,{mana:999,attack:999,health:999});
+    return `<section class="sample" data-card-id="${source.id}"><p>${source.id}</p>${artwork(card,true)}</section>`;
+  }).join('');
+  CardTextFit.fit(document);
+}
+document.querySelector('#locale').addEventListener('change',renderPreview);
+document.querySelector('#stress').addEventListener('change',renderPreview);
+document.querySelector('#width').addEventListener('input',event=>{
+  document.documentElement.style.setProperty('--preview-width',event.target.value+'px');
+  document.querySelector('#size').textContent=event.target.value+' px';
+  CardTextFit.fit(document);
+});
+document.querySelector('#guides').addEventListener('change',event=>document.body.classList.toggle('guides',event.target.checked));
+renderPreview();
+</script>
+</body>
+</html>

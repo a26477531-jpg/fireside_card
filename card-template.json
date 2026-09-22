@@ -1,0 +1,10 @@
+{
+  "version": "cthulhu-v1",
+  "canvas": { "width": 1024, "height": 1536 },
+  "reference": "cards-clean-layout-31/25-cthulhu.webp",
+  "name": { "x": 155, "y": 835, "width": 714, "height": 90, "fontSize": 52 },
+  "rules": { "x": 100, "y": 975, "width": 824, "height": 350, "fontSize": 38, "notchStart": 70, "sideInset": 22 },
+  "mana": { "x": 53, "y": 71.5, "width": 150, "height": 125, "fontSize": 108 },
+  "attack": { "x": 64, "y": 1304.5, "width": 146, "height": 125, "fontSize": 100 },
+  "health": { "x": 816, "y": 1291.5, "width": 150, "height": 125, "fontSize": 100 }
+}

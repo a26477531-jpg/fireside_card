@@ -1,0 +1,27 @@
+/* All positions come from card-template.json, independent of per-card overrides. */
+.card-art.card-template .card-name {
+  transform:none;
+  color:#fff0cf;
+  white-space:nowrap;
+  line-height:1.1;
+  text-align:center;
+}
+.card-art.card-template .card-ability { padding:0; line-height:1.2; }
+.card-template .card-stat {
+  position:absolute;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  /* Compensate for the font's baseline so the visible digits center on the gem. */
+  box-sizing:border-box;
+  padding-bottom:.15em;
+  font-family:Georgia,'Times New Roman',serif;
+  font-weight:700;
+  line-height:1;
+  white-space:nowrap;
+  color:#fff8df;
+  -webkit-text-stroke:.3cqw #21170d;
+  paint-order:stroke fill;
+  text-shadow:0 .3cqw .35cqw #000;
+  pointer-events:none;
+}
