@@ -1,0 +1,343 @@
+[
+  {
+    "id": "01",
+    "source": "cards-clean-layout-31/01-murloc-chief.webp",
+    "output": "cards-unified-31/01-murloc-chief.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      797
+    ]
+  },
+  {
+    "id": "02",
+    "source": "cards-clean-layout-31/02-skeleton-soldier.webp",
+    "output": "cards-unified-31/02-skeleton-soldier.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      781
+    ]
+  },
+  {
+    "id": "03",
+    "source": "cards-clean-layout-31/03-ghoul.webp",
+    "output": "cards-unified-31/03-ghoul.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      794
+    ]
+  },
+  {
+    "id": "04",
+    "source": "cards-clean-layout-31/04-greatmaul-soldier.webp",
+    "output": "cards-unified-31/04-greatmaul-soldier.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      793
+    ]
+  },
+  {
+    "id": "05",
+    "source": "cards-clean-layout-31/05-two-headed-cyclops.webp",
+    "output": "cards-unified-31/05-two-headed-cyclops.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      800
+    ]
+  },
+  {
+    "id": "06",
+    "source": "cards-clean-layout-31/06-goblin-merchant.webp",
+    "output": "cards-unified-31/06-goblin-merchant.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      766
+    ]
+  },
+  {
+    "id": "07",
+    "source": "cards-clean-layout-31/07-redtusk-orc.webp",
+    "output": "cards-unified-31/07-redtusk-orc.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      790
+    ]
+  },
+  {
+    "id": "08",
+    "source": "cards-clean-layout-31/08-antler-shaman.webp",
+    "output": "cards-unified-31/08-antler-shaman.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      746
+    ]
+  },
+  {
+    "id": "09",
+    "source": "cards-clean-layout-31/09-wolf-raider.webp",
+    "output": "cards-unified-31/09-wolf-raider.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      800
+    ]
+  },
+  {
+    "id": "10",
+    "source": "cards-clean-layout-31/10-gnoll-headhunter.webp",
+    "output": "cards-unified-31/10-gnoll-headhunter.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      772
+    ]
+  },
+  {
+    "id": "11",
+    "source": "cards-clean-layout-31/11-hollow-treant.webp",
+    "output": "cards-unified-31/11-hollow-treant.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      780
+    ]
+  },
+  {
+    "id": "12",
+    "source": "cards-clean-layout-31/12-moonmoth-fae.webp",
+    "output": "cards-unified-31/12-moonmoth-fae.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      800
+    ]
+  },
+  {
+    "id": "13",
+    "source": "cards-clean-layout-31/13-tide-priest.webp",
+    "output": "cards-unified-31/13-tide-priest.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      752
+    ]
+  },
+  {
+    "id": "14",
+    "source": "cards-clean-layout-31/14-crab-gladiator.webp",
+    "output": "cards-unified-31/14-crab-gladiator.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      767
+    ]
+  },
+  {
+    "id": "15",
+    "source": "cards-clean-layout-31/15-shipwreck-hermit.webp",
+    "output": "cards-unified-31/15-shipwreck-hermit.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      800
+    ]
+  },
+  {
+    "id": "16",
+    "source": "cards-clean-layout-31/16-drowned-sailor.webp",
+    "output": "cards-unified-31/16-drowned-sailor.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      779
+    ]
+  },
+  {
+    "id": "17",
+    "source": "cards-clean-layout-31/17-reef-siren.webp",
+    "output": "cards-unified-31/17-reef-siren.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      796
+    ]
+  },
+  {
+    "id": "18",
+    "source": "cards-clean-layout-31/18-ash-hound.webp",
+    "output": "cards-unified-31/18-ash-hound.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      751
+    ]
+  },
+  {
+    "id": "19",
+    "source": "cards-clean-layout-31/19-mirror-succubus.webp",
+    "output": "cards-unified-31/19-mirror-succubus.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      800
+    ]
+  },
+  {
+    "id": "20",
+    "source": "cards-clean-layout-31/20-sulfur-duke.webp",
+    "output": "cards-unified-31/20-sulfur-duke.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      796
+    ]
+  },
+  {
+    "id": "21",
+    "source": "cards-clean-layout-31/21-shackle-jailer.webp",
+    "output": "cards-unified-31/21-shackle-jailer.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      800
+    ]
+  },
+  {
+    "id": "22",
+    "source": "cards-clean-layout-31/22-cockatrice.webp",
+    "output": "cards-unified-31/22-cockatrice.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      800
+    ]
+  },
+  {
+    "id": "23",
+    "source": "cards-clean-layout-31/23-chest-mimic.webp",
+    "output": "cards-unified-31/23-chest-mimic.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      745
+    ]
+  },
+  {
+    "id": "24",
+    "source": "cards-clean-layout-31/24-dwarf-elf.webp",
+    "output": "cards-unified-31/24-dwarf-elf.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      784
+    ]
+  },
+  {
+    "id": "25",
+    "source": "cards-clean-layout-31/25-cthulhu.webp",
+    "output": "cards-unified-31/25-cthulhu.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      795
+    ]
+  },
+  {
+    "id": "26",
+    "source": "cards-clean-layout-31/26-viking-berserker.webp",
+    "output": "cards-unified-31/26-viking-berserker.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      792
+    ]
+  },
+  {
+    "id": "27",
+    "source": "cards-clean-layout-31/27-elven-handmaiden.webp",
+    "output": "cards-unified-31/27-elven-handmaiden.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      796
+    ]
+  },
+  {
+    "id": "28",
+    "source": "cards-clean-layout-31/28-shield-gargoyle.webp",
+    "output": "cards-unified-31/28-shield-gargoyle.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      793
+    ]
+  },
+  {
+    "id": "29",
+    "source": "cards-clean-layout-31/29-hellfire-giant.webp",
+    "output": "cards-unified-31/29-hellfire-giant.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      784
+    ]
+  },
+  {
+    "id": "30",
+    "source": "cards-clean-layout-31/30-thunder-shaman.webp",
+    "output": "cards-unified-31/30-thunder-shaman.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      751
+    ]
+  },
+  {
+    "id": "31",
+    "source": "cards-clean-layout-31/31-fire-salamander-totem.webp",
+    "output": "cards-unified-31/31-fire-salamander-totem.webp",
+    "sourceCrop": [
+      80,
+      95,
+      944,
+      776
+    ]
+  }
+]
