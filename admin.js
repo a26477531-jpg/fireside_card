@@ -1,3 +1,4 @@
+import {t, getLanguage, setLanguage, applyLanguage} from './admin-i18n.js';
 import {languages, fingerprint, translationState} from './translation-workflow.js';
 'use strict';
 (() => {
@@ -38,26 +39,26 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
   async function api(url,options={}) {
     const response=await fetch(url,{credentials:'same-origin',cache:'no-store',...options});
     let data; try {data=await response.json();} catch {
-      const error=new Error(`伺服器回應格式異常（HTTP ${response.status}，${url.split('?')[0]}）。請提供此訊息以便查詢；已填內容仍保留。`);
+      const error=new Error(t('伺服器回應格式異常（HTTP {status}，{url}）。請提供此訊息以便查詢；已填內容仍保留。',{status:response.status,url:url.split('?')[0]}));
       error.code=url==='/api/admin/translate'?'translation-failed':'invalid-response';throw error;
     }
     if(!response.ok || !data.ok) {
-      if(response.status===401 || response.status===403){$('workspace').hidden=true;$('access').hidden=false;$('access').textContent=errors[data.error]||'無法存取後台';}
-      const error=new Error(errors[data.error]||'讀取或儲存失敗，請稍後重試。');error.code=data.error;throw error;
+      if(response.status===401 || response.status===403){$('workspace').hidden=true;$('access').hidden=false;$('access').textContent=t(errors[data.error]||'')||t('無法存取後台');}
+      const error=new Error(t(errors[data.error]||'')||t('讀取或儲存失敗，請稍後重試。'));error.code=data.error;throw error;
     }
     return data;
   }
-  const badge=s=>`<span class="status ${esc(s)}">${esc(statusNames[s]||s)}</span>`;
+  const badge=s=>`<span class="status ${esc(s)}">${esc(t(statusNames[s]||s))}</span>`;
   function render() {
     const isCard=tab==='cards';
-    $('list-title').textContent=isCard?'卡牌管理':'商品與金幣價格';
-    $('list-help').textContent=isCard?'草稿可先保存，上架後才會顯示於卡牌庫。':'以整數金幣設定售價；修改會更新商城，不會改寫歷史訂單。';
-    $('create').textContent=isCard?'＋ 建立卡牌':'＋ 建立商品';
+    $('list-title').textContent=isCard?t('卡牌管理'):t('商品與金幣價格');
+    $('list-help').textContent=isCard?t('草稿可先保存，上架後才會顯示於卡牌庫。'):t('以整數金幣設定售價；修改會更新商城，不會改寫歷史訂單。');
+    $('create').textContent=isCard?t('＋ 建立卡牌'):t('＋ 建立商品');
     const q=$('search').value.trim().toLowerCase(),status=$('status').value;
     const rows=(isCard?cards:products).filter(r=>(!status||r.status===status)&&`${r.id} ${r.name}`.toLowerCase().includes(q));
-    $('count').textContent=`顯示 ${rows.length} 筆，共 ${(isCard?cards:products).length} 筆`;
-    $('catalog-head').innerHTML=`<tr><th>${isCard?'卡牌':'商品'}</th><th>${isCard?'系列／數值':'內容／金幣售價'}</th><th>狀態</th><th>操作</th></tr>`;
-    $('catalog-body').innerHTML=rows.map(r=>`<tr><td>${isCard?`<img src="${esc(r.image)}" alt="" loading="lazy">`:''}${esc(r.name)}<small>${esc(r.id)}</small></td><td>${isCard?`${esc(r.collection)}<small>法力 ${r.mana} · 攻擊 ${r.attack} · 生命 ${r.health}</small>`:`${r.coinPrice.toLocaleString()} 金幣<small>${r.cardIds.map(id=>esc(cards.find(c=>c.id===id)?.name||id)).join('、')}</small>`}</td><td>${badge(r.status)}</td><td><button data-edit="${esc(r.id)}">編輯</button></td></tr>`).join('');
+    $('count').textContent=t('顯示 {shown} 筆，共 {total} 筆',{shown:rows.length,total:(isCard?cards:products).length});
+    $('catalog-head').innerHTML=`<tr><th>${isCard?t('卡牌'):t('商品')}</th><th>${isCard?t('系列／數值'):t('內容／金幣售價')}</th><th>${t('狀態')}</th><th>${t('操作')}</th></tr>`;
+    $('catalog-body').innerHTML=rows.map(r=>`<tr><td>${isCard?`<img src="${esc(r.image)}" alt="" loading="lazy">`:''}${esc(r.name)}<small>${esc(r.id)}</small></td><td>${isCard?`${esc(r.collection)}<small>${t('法力')} ${r.mana} · ${t('攻擊')} ${r.attack} · ${t('生命')} ${r.health}</small>`:`${r.coinPrice.toLocaleString()} ${t('金幣')}<small>${r.cardIds.map(id=>esc(cards.find(c=>c.id===id)?.name||id)).join('、')}</small>`}</td><td>${badge(r.status)}</td><td><button data-edit="${esc(r.id)}">${t('編輯')}</button></td></tr>`).join('');
     $('catalog-empty').hidden=rows.length>0;
   }
   async function reload() {
@@ -69,7 +70,7 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
   function addAbility(a={title:'',text:''},host=$('abilities')) {
     if(host.children.length>=12)return;
     const row=document.createElement('div');row.className='ability';
-    row.innerHTML=`<label>技能名稱 *<input data-title required maxlength="120" value="${esc(a.title)}"></label><label>技能效果 *<textarea data-text required maxlength="3000" rows="3">${esc(a.text)}</textarea></label><button type="button">移除技能</button>`;
+    row.innerHTML=`<label><span data-i18n="技能名稱 *">${t('技能名稱 *')}</span><input data-title required maxlength="120" value="${esc(a.title)}"></label><label><span data-i18n="技能效果 *">${t('技能效果 *')}</span><textarea data-text required maxlength="3000" rows="3">${esc(a.text)}</textarea></label><button type="button"><span data-i18n="移除技能">${t('移除技能')}</span></button>`;
     row.querySelector('button').onclick=()=>row.remove();host.append(row);
   }
   function saveTranslation() {
@@ -84,20 +85,20 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
   }
   function markTranslation(status) {translationMeta[translationLanguage]={status,source:fingerprint(sourceContent()),sourceLanguage:$('source-language').value};}
   function updateTranslationStatus() {
-    const names={missing:'尚無翻譯',machine:'自動翻譯・待人工確認',edited:'人工修改・待確認',reviewed:'已人工確認',stale:'原文已更新・翻譯待確認'};
+    const names={missing:t('尚無翻譯'),machine:t('自動翻譯・待人工確認'),edited:t('人工修改・待確認'),reviewed:t('已人工確認'),stale:t('原文已更新・翻譯待確認')};
     const card={...sourceContent(),sourceLanguage:$('source-language').value,translations,translationMeta};
     $('translation-status').textContent=languages.filter(l=>l!==card.sourceLanguage).map(l=>`${l}：${names[translationState(card,l)]}`).join(' ／ ');
   }
   async function generateTranslations(current=false) {
     saveTranslation();
     const source=sourceContent(),sourceLanguage=$('source-language').value;
-    if(!source.name || source.abilities.some(a=>!a.title||!a.text))throw new Error('請先填寫原文名稱及完整技能。');
+    if(!source.name || source.abilities.some(a=>!a.title||!a.text))throw new Error(t('請先填寫原文名稱及完整技能。'));
     const targets=current?[translationLanguage]:languages.filter(l=>l!==sourceLanguage&&!translations[l]);
     if(!targets.length)return;
-    if(current && translations[translationLanguage] && !window.confirm('重新翻譯會取代此語言的現有內容（包含人工修改），確定繼續？'))return;
+    if(current && translations[translationLanguage] && !window.confirm(t('重新翻譯會取代此語言的現有內容（包含人工修改），確定繼續？')))return;
     translating=true;
     const controls=[...form.querySelectorAll('input,textarea,select,button')],disabled=controls.map(el=>el.disabled);
-    controls.forEach(el=>el.disabled=true);$('translation-status').textContent='正在翻譯，請稍候…';
+    controls.forEach(el=>el.disabled=true);$('translation-status').textContent=t('正在翻譯，請稍候…');
     try {
       const result=await api('/api/admin/translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source,sourceLanguage,targets}),signal:AbortSignal.timeout(60000)});
       for(const lang of targets){translations[lang]=result.translations[lang];translationMeta[lang]={status:'machine',source:fingerprint(source),sourceLanguage};}
@@ -111,7 +112,7 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
   function edit(id) {
     const isCard=tab==='cards';editing=id?(isCard?cards:products).find(r=>r.id===id):null;
     form.reset();$('form-error').textContent='';$('abilities').replaceChildren();$('translated-abilities').replaceChildren();
-    $('editor-title').textContent=`${editing?'編輯':'建立'}${isCard?'卡牌':'商品'}`;
+    $('editor-title').textContent=t(isCard?(editing?'編輯卡牌':'建立卡牌'):(editing?'編輯商品':'建立商品'));
     $('card-fields').hidden=!isCard;$('product-fields').hidden=isCard;
     // Disabled hidden fields must not participate in native required validation.
     for(const el of $('card-fields').querySelectorAll('input,textarea,button,select'))el.disabled=!isCard;
@@ -131,7 +132,7 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
       translationLanguage=languages.find(l=>l!==sourceLanguage);$('translation-language').value=translationLanguage;$('auto-translate').checked=!editing;$('translation-panel').open=false;showTranslation();
       $('collection-options').innerHTML=[...new Set(cards.map(c=>c.collection))].map(v=>`<option value="${esc(v)}"></option>`).join('');
     } else {
-      $('product-cards').innerHTML=cards.map(c=>`<label><input type="checkbox" value="${esc(c.id)}" ${editing?.cardIds.includes(c.id)?'checked':''}>${esc(c.name)} (${esc(statusNames[c.status])})</label>`).join('');
+      $('product-cards').innerHTML=cards.map(c=>`<label><input type="checkbox" value="${esc(c.id)}" ${editing?.cardIds.includes(c.id)?'checked':''}>${esc(c.name)} (<span data-product-status="${esc(c.status)}">${esc(t(statusNames[c.status]))}</span>)</label>`).join('');
     }
     $('unsaved-warning').hidden=true;savedEditorState=editorState();
     $('editor').showModal();field(editing?'name':'id').focus();
@@ -139,8 +140,8 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
   form.addEventListener('invalid',event=>{
     const input=event.target;
     const details=input.closest('details');if(details)details.open=true;
-    const label=input.closest('label')?.childNodes[0]?.textContent?.trim()||'必填欄位';
-    $('form-error').textContent=`無法儲存：請檢查「${label}」。${input.validationMessage}`;
+    const label=input.closest('label')?.childNodes[0]?.textContent?.trim()||t('必填欄位');
+    $('form-error').textContent=t('無法儲存：請檢查「{label}」。{message}',{label,message:input.validationMessage});
   },true);
   form.addEventListener('submit',async event=>{
     event.preventDefault();if(saving||translating)return;
@@ -154,23 +155,27 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
       if($('auto-translate').checked){try{await generateTranslations();}catch(e){
         const canSaveDraft=body.status==='draft' && (e.code?.startsWith('translation-')||['TypeError','TimeoutError','AbortError'].includes(e.name));
         if(!canSaveDraft){$('form-error').textContent=e.message;return;}
-        translationWarning='已儲存草稿；自動翻譯未完成，原文與既有譯文已保留。請稍後編輯此卡牌，按「自動補齊翻譯」。';
+        translationWarning=t('已儲存草稿；自動翻譯未完成，原文與既有譯文已保留。請稍後編輯此卡牌，按「自動補齊翻譯」。');
       }}
       body.translations=translations;body.translationMeta=translationMeta;body.sourceLanguage=$('source-language').value;
-      if(body.status==='active' && languages.some(l=>l!==body.sourceLanguage && translationState(body,l)!=='reviewed')){$('form-error').textContent='請先將卡牌存為草稿，確認所有語言翻譯後再上架。';$('translation-panel').open=true;return;}
+      if(body.status==='active' && languages.some(l=>l!==body.sourceLanguage && translationState(body,l)!=='reviewed')){$('form-error').textContent=t('請先將卡牌存為草稿，確認所有語言翻譯後再上架。');$('translation-panel').open=true;return;}
       for(const key of ['nameLayout','rulesLayout'])if(editing?.[key])body[key]=editing[key];
-    } else {body.coinPrice=Number(field('coinPrice').value);body.cardIds=[...$('product-cards').querySelectorAll('input:checked')].map(i=>i.value);if(!body.cardIds.length){$('form-error').textContent='請至少選一張卡牌。';return;}}
-    saving=true;$('save').disabled=true;$('save').textContent='儲存中…';$('form-error').textContent='';
-    try{const result=await api('/api/admin/'+tab,{method:editing?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const items=tab==='cards'?cards:products;const i=items.findIndex(r=>r.id===result.item.id);if(i>=0)items[i]=result.item;else items.unshift(result.item);render();$('editor').close();$('notice').textContent=translationWarning||'已儲存，前台重新整理後會載入最新資料。';}
+    } else {body.coinPrice=Number(field('coinPrice').value);body.cardIds=[...$('product-cards').querySelectorAll('input:checked')].map(i=>i.value);if(!body.cardIds.length){$('form-error').textContent=t('請至少選一張卡牌。');return;}}
+    saving=true;$('save').disabled=true;$('save').textContent=t('儲存中…');$('form-error').textContent='';
+    try{const result=await api('/api/admin/'+tab,{method:editing?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const items=tab==='cards'?cards:products;const i=items.findIndex(r=>r.id===result.item.id);if(i>=0)items[i]=result.item;else items.unshift(result.item);render();$('editor').close();$('notice').textContent=translationWarning||t('已儲存，前台重新整理後會載入最新資料。');}
     catch(e){$('form-error').textContent=e.message;}
-    finally{saving=false;$('save').disabled=false;$('save').textContent='儲存';}
+    finally{saving=false;$('save').disabled=false;$('save').textContent=t('儲存');}
   });
   async function orders() {
-    const generation=++orderGeneration;$('orders-body').replaceChildren();$('orders-empty').hidden=true;$('order-summary').textContent='查詢中…';$('prev').disabled=$('next').disabled=true;
+    lastOrders=null;const generation=++orderGeneration;$('orders-body').replaceChildren();$('orders-empty').hidden=true;$('order-summary').textContent=t('查詢中…');$('prev').disabled=$('next').disabled=true;
     try{const data=await api('/api/admin/orders?'+orderQuery+'&page='+page);if(generation!==orderGeneration)return;
-      $('orders-body').innerHTML=data.orders.map(o=>`<tr><td><strong>${esc(o.order_number || o.id)}</strong><small>${esc(o.created_at)}</small><details class="order-reference"><summary>完整識別碼</summary><small>${esc(o.id)}</small></details></td><td>${esc(o.player_username)}<small>ID ${esc(o.user_id??'已刪除')} · ${esc(o.player_email)}</small></td><td>${esc(o.product_name)}<small>${esc(o.product_id)}</small></td><td>${o.quantity}</td><td>${o.total.toLocaleString()} ${o.currency==='COIN'?'金幣':esc(o.currency)}<small>單價 ${o.unit_price.toLocaleString()}</small></td><td>${badge(o.status)}</td></tr>`).join('');
-      $('orders-empty').hidden=data.orders.length>0;$('order-summary').textContent=`共 ${data.total} 筆交易`;$('page').textContent=`${page} / ${Math.max(1,Math.ceil(data.total/25))}`;$('prev').disabled=page<=1;$('next').disabled=page*25>=data.total;
+      lastOrders=data;renderOrders(data);
     }catch(e){if(generation===orderGeneration){$('order-summary').textContent=e.message;$('page').textContent='';}}
+  }
+  let lastOrders=null;
+  function renderOrders(data) {
+      $('orders-body').innerHTML=data.orders.map(o=>`<tr><td><strong>${esc(o.order_number || o.id)}</strong><small>${esc(o.created_at)}</small><details class="order-reference"><summary>${t('完整識別碼')}</summary><small>${esc(o.id)}</small></details></td><td>${esc(o.player_username)}<small>ID ${esc(o.user_id??t('已刪除'))} · ${esc(o.player_email)}</small></td><td>${esc(o.product_name)}<small>${esc(o.product_id)}</small></td><td>${o.quantity}</td><td>${o.total.toLocaleString()} ${o.currency==='COIN'?t('金幣'):esc(o.currency)}<small>${t('單價')} ${o.unit_price.toLocaleString()}</small></td><td>${badge(o.status)}</td></tr>`).join('');
+      $('orders-empty').hidden=data.orders.length>0;$('order-summary').textContent=t('共 {total} 筆交易',{total:data.total});$('page').textContent=`${page} / ${Math.max(1,Math.ceil(data.total/25))}`;$('prev').disabled=page<=1;$('next').disabled=page*25>=data.total;
   }
   document.querySelectorAll('[data-tab]').forEach(button=>button.onclick=()=>{tab=button.dataset.tab;document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));$('catalog-panel').hidden=tab==='orders';$('orders-panel').hidden=tab!=='orders';$('notice').textContent='';if(tab==='orders')orders();else render();});
   $('search').oninput=render;$('status').onchange=render;$('reload').onclick=reload;$('create').onclick=()=>edit();
@@ -183,7 +188,7 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
     translationLanguage=languages.find(l=>l!==sourceLanguage);$('translation-language').value=translationLanguage;showTranslation();
   };
   for(const [id,current] of [['translate-missing',false],['translate-current',true]])$(id).onclick=async()=>{if(translating||saving)return;$('form-error').textContent='';try{await generateTranslations(current);}catch(e){$('form-error').textContent=e.message;}};
-  $('review-translation').onclick=()=>{saveTranslation();if(!translations[translationLanguage]){$('form-error').textContent='請先填寫翻譯。';return;}markTranslation('reviewed');updateTranslationStatus();};
+  $('review-translation').onclick=()=>{saveTranslation();if(!translations[translationLanguage]){$('form-error').textContent=t('請先填寫翻譯。');return;}markTranslation('reviewed');updateTranslationStatus();};
   form.addEventListener('input',()=>{if(tab==='cards'){saveTranslation();updateTranslationStatus();}});
   $('abilities').addEventListener('click',()=>updateTranslationStatus());
   $('translated-abilities').addEventListener('click',()=>{saveTranslation();updateTranslationStatus();});
@@ -197,5 +202,13 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
   });
   $('order-search').onsubmit=e=>{e.preventDefault();page=1;orderQuery=new URLSearchParams(new FormData(e.target)).toString();orders();};
   $('prev').onclick=()=>{page--;orders();};$('next').onclick=()=>{page++;orders();};
-  (async()=>{try{const {user}=await api('/api/me');if(!user){$('access').innerHTML='請先以管理員帳號<a href="login.html">登入</a>。';return;}if(user.role!=='admin'){$('access').textContent='此帳號沒有管理權限。';return;}$('admin-name').textContent=user.username;$('access').hidden=true;$('workspace').hidden=false;await reload();}catch(e){$('access').textContent=e.message;}})();
+  $('admin-language').value=getLanguage();applyLanguage();
+  $('admin-language').onchange=()=>{
+    setLanguage($('admin-language').value);
+    if(tab==='orders'){if(lastOrders)renderOrders(lastOrders);}else render();
+    if($('editor').open && tab==='cards' && !translating)updateTranslationStatus();
+    // Product labels contain catalog names; update only the status text.
+    document.querySelectorAll('[data-product-status]').forEach(el=>el.textContent=t(statusNames[el.dataset.productStatus]));
+  };
+  (async()=>{try{const {user}=await api('/api/me');if(!user){$('access').innerHTML=`<span data-i18n="請先以管理員帳號">${t('請先以管理員帳號')}</span><a href="login.html" data-i18n="登入">${t('登入')}</a><span data-i18n="。">${t('。')}</span>`;return;}if(user.role!=='admin'){$('access').textContent=t('此帳號沒有管理權限。');return;}$('admin-name').textContent=user.username;$('access').hidden=true;$('workspace').hidden=false;await reload();}catch(e){$('access').textContent=e.message;}})();
 })();

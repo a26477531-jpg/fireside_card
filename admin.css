@@ -10,3 +10,12 @@ td small { overflow-wrap: anywhere; }
 #card-fields > label:has(input[type=checkbox]) { flex-direction: row; align-items: center; }
 #translation-status { background: #edf2ea; padding: 12px; border-radius: 6px; overflow-wrap: anywhere; }
 #translation-panel > button { margin: 6px 4px 6px 0; }
+.topbar > a[href="shop.html"] { margin-left: auto; font-size: 14px; }
+.topbar a span, .topbar > span span, .interface-language span { border: 0; padding: 0; font-size: inherit; }
+.interface-language { flex-direction: row; align-items: center; gap: 8px; }
+.interface-language select { padding: 7px 10px; }
+.editor-actions { flex-wrap: wrap; }
+@media (max-width: 640px) {
+  .interface-language { width: 100%; justify-content: flex-end; }
+  .tabs { flex-wrap: wrap; }
+}
