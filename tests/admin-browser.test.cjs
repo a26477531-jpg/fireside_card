@@ -47,6 +47,11 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     await page.locator('[data-tab="orders"]').click();await page.locator('#orders-empty').waitFor();assert.match(await page.locator('#order-summary').textContent(),/0/);
     sqlite.exec("INSERT INTO purchase_orders(id,user_id,player_username,player_email,product_id,product_name,currency,unit_price,quantity,total,status,created_at) VALUES ('browser-order',2,'member','member@example.test','browser-product','交易當時名稱','COIN',88,1,88,'completed','2026-09-21T10:00:00.000Z');");
     await page.locator('#order-search [name="player"]').fill('member');await page.locator('#order-search button').click();await page.waitForFunction(()=>document.querySelectorAll('#orders-body tr').length===1);assert.match(await page.locator('#orders-body').textContent(),/88 金幣/);
+    assert.equal(await page.locator('#orders-body strong').textContent(),'ORD-000001');
+    assert.equal(await page.locator('#orders-body details small').isVisible(),false);
+    await page.locator('#orders-body summary').click();
+    assert.equal(await page.locator('#orders-body details small').isVisible(),true);
+    assert.equal(await page.locator('#orders-body details small').textContent(),'browser-order');
     await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     await page.locator('[data-tab="cards"]').click();await page.locator('#search').fill('');
     if(process.env.ADMIN_SCREENSHOT)await page.screenshot({path:process.env.ADMIN_SCREENSHOT});

@@ -14,7 +14,7 @@ async function list({request,env}) {
   const clause=where.length?' WHERE '+where.join(' AND '):'';
   const result=await env.DB.batch([
     env.DB.prepare('SELECT COUNT(*) AS total FROM purchase_orders'+clause).bind(...args),
-    env.DB.prepare('SELECT * FROM purchase_orders'+clause+' ORDER BY created_at DESC,id DESC LIMIT 25 OFFSET ?').bind(...args,(page-1)*25)
+    env.DB.prepare("SELECT *, (SELECT printf('ORD-%06d', number) FROM order_numbers WHERE order_id=purchase_orders.id) AS order_number FROM purchase_orders"+clause+' ORDER BY created_at DESC,id DESC LIMIT 25 OFFSET ?').bind(...args,(page-1)*25)
   ]);
   return json({ok:true,total:result[0].results[0].total,page,pageSize:25,orders:result[1].results});
 }

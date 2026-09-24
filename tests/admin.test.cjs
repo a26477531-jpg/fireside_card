@@ -64,8 +64,37 @@ test('orders: actual SQLite filters, pagination, snapshots and authorization',as
     insert.run('literal','percent%player','literal@example.test','deepsea-duo','快照','completed','2026-09-22T10:00:00.000Z');
     const query=async q=>(await (await invoke(onRequestGet,DB,{url:'https://cards.test/api/admin/orders?'+q})).json());
     let r=await query('player=member&status=completed&from=2026-09-21&to=2026-09-21');assert.equal(r.total,27);assert.equal(r.orders.length,25);assert.equal(r.orders[0].total,60);assert.equal(r.orders[0].product_name,'當時的商品名稱');
+    assert.ok(r.orders.every(o=>/^ORD-\d{6,}$/.test(o.order_number)));
+    assert.equal(new Set(r.orders.map(o=>o.order_number)).size,25);
+    const reference=r.orders[0];
+    assert.equal((await query('player=2')).orders.find(o=>o.id===reference.id).order_number,reference.order_number);
     r=await query('player=member&status=completed&page=2');assert.equal(r.orders.length,2);
     assert.equal((await query('player=2')).total,29);assert.equal((await query('player=%25')).total,1);assert.equal((await query('player=unknown')).total,0);
     assert.equal((await invoke(onRequestGet,DB,{url:'https://cards.test/api/admin/orders?from=2026-02-31'})).status,400);
+  }finally{sqlite.close();}
+});
+
+test('order numbers: backfill, rerun, new orders, rollback and no reuse',()=>{
+  const {sqlite}=database();
+  try {
+    sqlite.exec('DROP TRIGGER assign_order_number; DROP TABLE order_numbers;');
+    const insert=sqlite.prepare("INSERT INTO purchase_orders(id,user_id,player_username,player_email,product_id,product_name,currency,unit_price,quantity,total,status,created_at) VALUES (?,2,'member','member@example.test','test','快照','COIN',0,1,0,'cancelled',?)");
+    insert.run('later','2026-09-24T00:00:00.000Z');
+    insert.run('earlier','2026-09-23T00:00:00.000Z');
+    const migration=require('node:fs').readFileSync(require('node:path').join(__dirname,'../migrations/0008_order_numbers.sql'),'utf8');
+    sqlite.exec(migration);
+    const numbers=()=>sqlite.prepare('SELECT number,order_id FROM order_numbers ORDER BY number').all().map(r=>({...r}));
+    assert.deepEqual(numbers(),[{number:1,order_id:'earlier'},{number:2,order_id:'later'}]);
+    sqlite.exec(migration);
+    assert.equal(numbers().length,2);
+    insert.run('new','2026-09-24T00:00:00.000Z');
+    assert.equal(numbers()[2].number,3);
+    sqlite.exec("DELETE FROM purchase_orders WHERE id='new'");
+    insert.run('next','2026-09-24T00:00:00.000Z');
+    assert.equal(numbers().at(-1).number,4);
+    sqlite.exec('BEGIN');
+    insert.run('rollback','2026-09-24T00:00:00.000Z');
+    sqlite.exec('ROLLBACK');
+    assert.ok(!numbers().some(r=>r.order_id==='rollback'));
   }finally{sqlite.close();}
 });

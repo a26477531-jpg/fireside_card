@@ -3,3 +3,5 @@
 :is(#catalog-panel,#orders-panel) table { min-width: 600px; }
 td button { white-space: nowrap; }
 td small { overflow-wrap: anywhere; }
+.order-reference { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.order-reference summary { font-weight: 400; }
