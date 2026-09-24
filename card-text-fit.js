@@ -22,6 +22,7 @@
     for(const art of root.querySelectorAll('.card-art')) {
       const name=art.querySelector('.card-name'),rules=art.querySelector('.card-ability');
       if(!name || !rules || !name.getBoundingClientRect().width)continue;
+      art.classList.add('is-fitting');
       for(const box of [name,rules,...art.querySelectorAll('.card-stat')]) {
         if(!box.dataset.baseFont && box.style.fontSize)box.dataset.baseFont=box.style.fontSize;
         if(box.dataset.baseFont)box.style.fontSize=box.dataset.baseFont;
@@ -38,6 +39,7 @@
         while(!okay() && size>minimum){size=Math.max(minimum,size-.25);box.style.fontSize=size+'px';}
         box.dataset.textFits=String(okay());
       }
+      art.classList.remove('is-fitting');
     }
   }
   function schedule(root) {
