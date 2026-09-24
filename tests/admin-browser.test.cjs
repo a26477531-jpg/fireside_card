@@ -6,7 +6,7 @@ const {database}=require('./helpers/d1.cjs');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
 (async()=>{
   const {DB,sqlite}=database();
-  const routes={};let translationCalls=0,failTranslation=false;
+  const routes={};let translationCalls=0,failTranslation=false,missingTranslationKey=true;
   const googleFetch=async(url,options)=>{translationCalls++;if(failTranslation)return new Response('{}',{status:503});const payload=JSON.parse(options.body);return Response.json({data:{translations:payload.q.map((text,i)=>({translatedText:i===0?payload.target+' translated':text}))}});};
   for(const name of ['admin/translate','admin/cards','admin/products','admin/orders','catalog','me','favorites','purchases','my-cards'])routes['/api/'+name]=await import('../functions/api/'+name+'.js');
   const translateRoute=routes['/api/admin/translate'];
@@ -22,7 +22,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
         const fn=routes[url.pathname]['onRequest'+({GET:'Get',POST:'Post',PUT:'Put',DELETE:'Delete'})[req.method]];
         if(!fn){res.writeHead(405).end();return;}
         const handlers=Array.isArray(fn)?fn:[fn];let i=0;
-        const context={request,env:{DB,GOOGLE_TRANSLATE_API_KEY:'test-secret'},data:{},next:()=>handlers[++i](context)};
+        const context={request,env:{DB,GOOGLE_TRANSLATE_API_KEY:missingTranslationKey?'':'test-secret'},data:{},next:()=>handlers[++i](context)};
         const response=await handlers[0](context);res.writeHead(response.status,Object.fromEntries(response.headers));res.end(await response.text());return;
       }
       const file=path.resolve(root,'.'+(url.pathname==='/'?'/index.html':url.pathname));
@@ -41,14 +41,27 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     await page.locator('#create').click();
     const form=page.locator('#edit-form');
     for(const [key,value] of Object.entries({id:'browser-card',name:'瀏覽器測試卡',collection:'新系列',image:'cards-clean-layout-31/01-murloc-chief.webp'}))await form.locator(`[name="${key}"]`).fill(value);
+    await form.locator('[name="id"]').fill('invalid id');await page.locator('#save').click();
+    assert.match(await page.locator('#form-error').textContent(),/無法儲存.*ID/);
+    await form.locator('[name="id"]').fill('browser-card');
     await page.locator('#add-ability').click();await page.locator('[data-title]').fill('測試技能');await page.locator('[data-text]').fill('測試規則文字');await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
     await page.locator('#search').fill('browser-card');assert.equal(await page.locator('#catalog-body tr').count(),1);
-    assert.equal(translationCalls,3);
+    assert.equal(translationCalls,0);
+    assert.match(await page.locator('#notice').textContent(),/已儲存草稿.*自動翻譯未完成/);
+    const savedDraft=JSON.parse(sqlite.prepare("SELECT data FROM catalog_cards WHERE id='browser-card'").get().data);
+    assert.equal(savedDraft.name,'瀏覽器測試卡');assert.equal(savedDraft.abilities[0].text,'測試規則文字');
     await page.locator('[data-edit="browser-card"]').click();
     await page.locator('#translation-panel summary').click();
+    missingTranslationKey=false;failTranslation=true;
+    await page.locator('#auto-translate').check();await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
+    assert.match(await page.locator('#notice').textContent(),/已儲存草稿.*自動翻譯未完成/);
+    assert.equal(translationCalls,3);failTranslation=false;
+    await page.locator('[data-edit="browser-card"]').click();await page.locator('#translation-panel summary').click();
+    await page.locator('#translate-missing').click();
+    await page.waitForFunction(()=>document.querySelector('#translation-status').textContent.includes('自動翻譯'));
     assert.match(await page.locator('#translation-status').textContent(),/自動翻譯/);
     await form.locator('[name="translatedName"]').fill('Hand edited English');
-    await page.locator('#translate-missing').click();assert.equal(translationCalls,3);
+    await page.locator('#translate-missing').click();assert.equal(translationCalls,6);
     const reviewAll=async()=>{for(const lang of ['en','ja','ko']){await page.locator('#translation-language').selectOption(lang);await page.locator('#review-translation').click();}};
     await reviewAll();await form.locator('[name="status"]').selectOption('active');await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
     await page.locator('[data-edit="browser-card"]').click();await form.locator('[name="name"]').fill('修改後的卡牌');await page.locator('#save').click();

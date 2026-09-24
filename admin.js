@@ -13,7 +13,7 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
     let data; try {data=await response.json();} catch {throw new Error('無法讀取後台資料。請確認 API 已部署且資料庫已初始化。');}
     if(!response.ok || !data.ok) {
       if(response.status===401 || response.status===403){$('workspace').hidden=true;$('access').hidden=false;$('access').textContent=errors[data.error]||'無法存取後台';}
-      throw new Error(errors[data.error]||'讀取或儲存失敗，請稍後重試。');
+      const error=new Error(errors[data.error]||'讀取或儲存失敗，請稍後重試。');error.code=data.error;throw error;
     }
     return data;
   }
@@ -105,21 +105,32 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
     }
     $('editor').showModal();field(editing?'name':'id').focus();
   }
+  form.addEventListener('invalid',event=>{
+    const input=event.target;
+    const details=input.closest('details');if(details)details.open=true;
+    const label=input.closest('label')?.childNodes[0]?.textContent?.trim()||'必填欄位';
+    $('form-error').textContent=`無法儲存：請檢查「${label}」。${input.validationMessage}`;
+  },true);
   form.addEventListener('submit',async event=>{
     event.preventDefault();if(saving||translating)return;
+    let translationWarning='';
     let body={id:field('id').value.trim(),name:field('name').value.trim(),status:field('status').value,version:editing?.version};
     if(tab==='cards') {
       for(const key of ['subtitle','image','collection'])body[key]=field(key).value.trim();
       for(const key of ['mana','attack','health'])body[key]=Number(field(key).value);
       body.abilities=[...$('abilities').children].map(r=>({title:r.querySelector('[data-title]').value.trim(),text:r.querySelector('[data-text]').value.trim()}));
       saveTranslation();
-      if($('auto-translate').checked){try{await generateTranslations();}catch(e){$('form-error').textContent=e.message;return;}}
+      if($('auto-translate').checked){try{await generateTranslations();}catch(e){
+        const canSaveDraft=body.status==='draft' && (['translation-unavailable','translation-failed'].includes(e.code)||['TypeError','TimeoutError','AbortError'].includes(e.name));
+        if(!canSaveDraft){$('form-error').textContent=e.message;return;}
+        translationWarning='已儲存草稿；自動翻譯未完成，原文與既有譯文已保留。請稍後編輯此卡牌，按「自動補齊翻譯」。';
+      }}
       body.translations=translations;body.translationMeta=translationMeta;body.sourceLanguage=$('source-language').value;
       if(body.status==='active' && languages.some(l=>l!==body.sourceLanguage && translationState(body,l)!=='reviewed')){$('form-error').textContent='請先將卡牌存為草稿，確認所有語言翻譯後再上架。';$('translation-panel').open=true;return;}
       for(const key of ['nameLayout','rulesLayout'])if(editing?.[key])body[key]=editing[key];
     } else {body.coinPrice=Number(field('coinPrice').value);body.cardIds=[...$('product-cards').querySelectorAll('input:checked')].map(i=>i.value);if(!body.cardIds.length){$('form-error').textContent='請至少選一張卡牌。';return;}}
     saving=true;$('save').disabled=true;$('save').textContent='儲存中…';$('form-error').textContent='';
-    try{const result=await api('/api/admin/'+tab,{method:editing?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const items=tab==='cards'?cards:products;const i=items.findIndex(r=>r.id===result.item.id);if(i>=0)items[i]=result.item;else items.unshift(result.item);render();$('editor').close();$('notice').textContent='已儲存，前台重新整理後會載入最新資料。';}
+    try{const result=await api('/api/admin/'+tab,{method:editing?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const items=tab==='cards'?cards:products;const i=items.findIndex(r=>r.id===result.item.id);if(i>=0)items[i]=result.item;else items.unshift(result.item);render();$('editor').close();$('notice').textContent=translationWarning||'已儲存，前台重新整理後會載入最新資料。';}
     catch(e){$('form-error').textContent=e.message;}
     finally{saving=false;$('save').disabled=false;$('save').textContent='儲存';}
   });
