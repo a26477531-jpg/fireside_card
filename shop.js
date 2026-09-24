@@ -1,10 +1,10 @@
-// 商城由 D1 catalog 提供商品與金幣價格。購買尚未開放，不產生假交易。
+// 商城由 D1 catalog 提供商品與金幣價格，結帳由 commerce.js 呼叫購買 API。
 // 詳情与縮圖共用 card-artwork.js 的卡牌文字排版。
 'use strict';
 (() => {
   const $ = id => document.getElementById(id);
   const I18n = window.CardI18n;
-  const t = key => I18n.t(key);
+  const t = key => window.CardCommerce?.t(key) || I18n.t(key);
   const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 
   // cardIds 對應資料庫卡牌；只顯示已上架且卡牌完整的商品。
@@ -39,7 +39,7 @@
         </button>
         <div class="shop-card-footer">
           <span class="shop-price">${formatPrice(bundle)}</span>
-          <button class="gold-button shop-buy" disabled data-bundle="${escapeHTML(bundle.id)}" type="button">${escapeHTML(t('shopBuy'))}</button>
+          <button class="gold-button shop-buy" data-bundle="${escapeHTML(bundle.id)}" type="button">${escapeHTML(t('shopBuy'))}</button>
         </div>
       </article>`;
     }).join('');
@@ -81,7 +81,7 @@
       <div class="shop-detail-cards">${cards.map(cardDetailBlock).join('')}</div>
       <div class="shop-detail-footer">
         <span class="shop-price">${formatPrice(bundle)}</span>
-        <button class="gold-button shop-buy" disabled data-bundle="${escapeHTML(bundle.id)}" type="button">${escapeHTML(t('shopBuy'))}</button>
+        <button class="gold-button shop-buy" data-bundle="${escapeHTML(bundle.id)}" type="button">${escapeHTML(t('shopBuy'))}</button>
       </div>`;
     if (!$('shop-detail').open) $('shop-detail').showModal();
     window.CardTextFit.schedule($('shop-detail-content'));
@@ -151,7 +151,7 @@
   if ($('shop-grid')) {
     $('shop-grid').addEventListener('click', event => {
       const buyButton = event.target.closest('.shop-buy');
-      if (buyButton) { showToast(t('shopAdded')); return; }
+      if (buyButton) { window.CardCommerce.buy(BUNDLES.find(b=>b.id===buyButton.dataset.bundle)); return; }
       const openButton = event.target.closest('.shop-card-open');
       if (openButton) openShopDetail(openButton.dataset.bundle, openButton);
     });
@@ -160,7 +160,8 @@
   // 詳情彈窗裡的「加入購物車」按鈕不在 #shop-grid 底下，需另外委派事件。
   if ($('shop-detail-content')) {
     $('shop-detail-content').addEventListener('click', event => {
-      if (event.target.closest('.shop-buy')) showToast(t('shopAdded'));
+      const button=event.target.closest('.shop-buy');
+      if (button) window.CardCommerce.buy(BUNDLES.find(b=>b.id===button.dataset.bundle));
     });
   }
 

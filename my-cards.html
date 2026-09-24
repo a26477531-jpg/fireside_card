@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>我的卡片｜爐邊卡牌</title>
+  <link rel="stylesheet" href="index.css?v=purchase-1">
+  <link rel="stylesheet" href="card-template.css?v=3d-1">
+  <link rel="stylesheet" href="commerce.css?v=1">
+  <script src="translations-data.js" defer></script><script src="i18n.js?v=coins-20260922" defer></script>
+  <script src="card-template.js?v=2" defer></script><script src="card-artwork.js?v=3d-1" defer></script><script src="card-text-fit.js?v=3d-1" defer></script>
+  <script src="commerce.js?v=1" defer></script><script src="account.js?v=coins-20260922" defer></script><script src="my-cards.js?v=1" defer></script>
+</head>
+<body>
+  <header class="navbar">
+    <a class="logo" href="index.html"><span>✦ 爐邊卡牌</span></a>
+    <nav aria-label="主要導覽"><a href="index.html" data-nav-label="library">卡牌庫</a><a href="shop.html" data-nav-label="shop">商城</a></nav>
+    <select id="language" aria-label="Language / 語言"><option value="zh-TW">繁體中文</option><option value="en">English</option><option value="ja">日本語</option><option value="ko">한국어</option></select>
+    <a id="nav-login" class="nav-account" href="login.html">登入</a><a id="nav-account" class="nav-account" href="register.html">註冊</a>
+  </header>
+  <main class="owned-page">
+    <h1 id="owned-title">我的卡片</h1><p id="owned-intro"></p>
+    <input id="owned-search" type="search" aria-label="搜尋我的卡片">
+    <button id="owned-retry" class="gold-button" type="button">重新載入</button>
+    <p id="owned-status" role="status"></p><p id="owned-links"><a id="owned-shop" href="shop.html">商城</a> <a id="owned-login" href="login.html" hidden>登入</a></p>
+    <div id="owned-grid" class="owned-grid"></div>
+  </main>
+  <dialog id="owned-detail" aria-labelledby="owned-detail-title"><button id="owned-close" class="gold-button" type="button">關閉</button><div id="owned-detail-content"></div></dialog>
+</body></html>

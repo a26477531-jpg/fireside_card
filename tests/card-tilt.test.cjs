@@ -1,0 +1,64 @@
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+(async () => {
+  const browser = await chromium.launch({channel:'msedge',headless:true});
+  try {
+    const page = await browser.newPage({viewport:{width:1000,height:850},hasTouch:true});
+    const errors = [];
+    page.on('pageerror', e => errors.push(e.message));
+    await page.setContent('<main style="display:flex;gap:100px;padding:60px"><section id="grid" style="width:260px"></section><section id="detail" style="width:350px"></section></main>');
+    for (const file of ['index.css','card-template.css']) await page.addStyleTag({path:path.resolve(file)});
+    for (const file of ['cards-data.js','translations-data.js','i18n.js','card-template.js','card-artwork.js','card-text-fit.js']) await page.addScriptTag({path:path.resolve(file)});
+    await page.evaluate(() => {
+      const card = CardI18n.card(CARDS[0]);
+      document.querySelector('#grid').innerHTML = artwork(card);
+      document.querySelector('#detail').innerHTML = artwork({...card,name:'資料更新測試',mana:9},true);
+      CardTextFit.fit(document);
+    });
+    assert.equal(await page.locator('#detail .card-name').textContent(), '資料更新測試');
+    assert.equal(await page.locator('#detail .card-stat-mana').textContent(), '9');
+    const art = page.locator('#grid .card-art');
+    const box = await art.boundingBox();
+    await page.mouse.move(box.x+box.width*.85,box.y+box.height*.2);
+    assert.match(await art.getAttribute('class'), /is-tilted/);
+    await page.mouse.move(5,5);
+    assert.doesNotMatch(await art.getAttribute('class'), /is-tilted/);
+    const detail = page.locator('#detail .card-art');
+    const face = page.locator('#detail .card-face');
+    await face.focus();
+    await page.keyboard.press('ArrowRight');
+    assert.equal(await detail.evaluate(el=>el.style.getPropertyValue('--tilt-y')), '5deg');
+    await page.evaluate(()=>CardTextFit.fit(document));
+    assert.equal(await page.locator('#detail [data-text-fits="false"]').count(),0);
+    await page.keyboard.press('Home');
+    const rect = await face.boundingBox();
+    await page.mouse.move(rect.x+rect.width/2,rect.y+rect.height/2);
+    await page.mouse.down();
+    await page.mouse.move(rect.x+rect.width/2+120,rect.y+rect.height/2-70,{steps:6});
+    await page.mouse.up();
+    assert.match(await detail.getAttribute('class'), /is-tilted/);
+    assert.doesNotMatch(await detail.getAttribute('class'), /is-dragging/);
+    await page.locator('[data-card-reset]').click();
+    assert.equal(await detail.evaluate(el=>el.style.getPropertyValue('--tilt-y')), '0deg');
+    // Real touch events exercise pointer capture and cancellation on mobile.
+    await page.setViewportSize({width:390,height:844});
+    await page.locator('#grid').evaluate(el=>el.remove());
+    await page.locator('main').evaluate(el=>el.style.cssText='padding:20px');
+    await page.locator('#detail').evaluate(el=>el.style.width='100%');
+    const touch = await face.boundingBox();
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:touch.x+100,y:touch.y+150}]});
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:touch.x+170,y:touch.y+190}]});
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    assert.match(await detail.getAttribute('class'), /is-tilted/);
+    assert.doesNotMatch(await detail.getAttribute('class'), /is-dragging/);
+    await page.emulateMedia({reducedMotion:'reduce'});
+    await face.focus();
+    await page.keyboard.press('Home');
+    await page.keyboard.press('ArrowLeft');
+    assert.equal(await detail.evaluate(el=>el.style.getPropertyValue('--tilt-y')), '-5deg');
+    assert.deepEqual(errors,[]);
+    console.log('PASS: live data text, hover/reset, keyboard, fitting while tilted, mouse drag, mobile touch and reduced-motion manual controls.');
+  } finally { await browser.close(); }
+})().catch(error=>{console.error(error);process.exitCode=1;});
