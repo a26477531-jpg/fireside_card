@@ -40,7 +40,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     await page.goto(base+'/admin.html');await page.waitForFunction(()=>document.querySelectorAll('#catalog-body tr').length===31);
     // Display card translations while preserving stored source text and form values.
     const originalName=await page.locator('#catalog-body tr').first().locator('td').first().textContent();
-    const originalCatalog=sqlite.prepare('SELECT id,data FROM catalog_cards ORDER BY id').all();
+    const originalCatalog=sqlite.prepare('SELECT id,data FROM catalog_cards ORDER BY updated_at DESC,id').all();
     const firstCard=JSON.parse(originalCatalog[0].data);
     await page.locator('#admin-language').selectOption('en');
     assert.equal(await page.locator('html').getAttribute('lang'),'en');
@@ -66,7 +66,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     assert.equal(await page.locator('#edit-form [name="name"]').inputValue(),firstCard.name);
     assert.equal(await page.locator('#edit-form [name="collection"]').inputValue(),firstCard.collection);
     await page.locator('#cancel').click();
-    assert.deepEqual(sqlite.prepare('SELECT id,data FROM catalog_cards ORDER BY id').all(),originalCatalog);
+    assert.deepEqual(sqlite.prepare('SELECT id,data FROM catalog_cards ORDER BY updated_at DESC,id').all(),originalCatalog);
     assert.equal(translationCalls,0);
     await page.reload();await page.waitForFunction(()=>document.querySelectorAll('#catalog-body tr').length===31);
     assert.equal(await page.locator('#admin-language').inputValue(),'en');
@@ -89,6 +89,19 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     await page.locator('[data-tab="products"]').click();
     assert.equal(await page.locator('#list-title').textContent(),'Products & coin prices');
+    const bundleNames={'deepsea-duo':'Deepsea Duo Pack','wildland-duo':'Wildland Duo Pack','inferno-duo':'Inferno Duo Pack'};
+    for(const [id,name] of Object.entries(bundleNames))assert.equal(await page.locator(`#catalog-body tr:has([data-edit="${id}"]) td`).first().textContent(),name+id);
+    await page.locator('#search').fill('Deepsea Duo Pack');
+    assert.equal(await page.locator('#catalog-body tr').count(),1);
+    await page.locator('#admin-language').selectOption('zh-TW');
+    assert.equal(await page.locator('#catalog-body tr td').first().textContent(),'深海雙卡組合deepsea-duo');
+    await page.locator('#admin-language').selectOption('en');
+    await page.locator('[data-edit="deepsea-duo"]').click();
+    assert.equal(await page.locator('#edit-form [name="name"]').inputValue(),'深海雙卡組合');
+    await page.locator('#cancel').click();
+    await page.locator('#search').fill('深海雙卡組合');
+    assert.equal(await page.locator('#catalog-body tr').count(),1);
+    await page.locator('#search').fill('');
     const firstProduct=JSON.parse(sqlite.prepare('SELECT data FROM catalog_products ORDER BY updated_at DESC,id LIMIT 1').get().data);
     const included=firstProduct.cardIds.map(id=>JSON.parse(originalCatalog.find(c=>c.id===id).data).translations.en.name);
     for(const name of included)assert.ok((await page.locator('#catalog-body tr').first().locator('td').nth(1).textContent()).includes(name));
@@ -170,7 +183,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     await page.locator('#close').click();assert.ok(await page.locator('#unsaved-warning').isVisible());await page.locator('#keep-editing').click();
     await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
     await page.locator('[data-tab="orders"]').click();await page.locator('#orders-empty').waitFor();assert.match(await page.locator('#order-summary').textContent(),/0/);
-    sqlite.exec("INSERT INTO purchase_orders(id,user_id,player_username,player_email,product_id,product_name,currency,unit_price,quantity,total,status,created_at) VALUES ('browser-order',2,'member','member@example.test','browser-product','交易當時名稱','COIN',88,1,88,'completed','2026-09-21T10:00:00.000Z');");
+    sqlite.exec("INSERT INTO purchase_orders(id,user_id,player_username,player_email,product_id,product_name,currency,unit_price,quantity,total,status,created_at) VALUES ('browser-order',2,'member','member@example.test','browser-product','深海雙卡組合','COIN',88,1,88,'completed','2026-09-21T10:00:00.000Z');");
     await page.locator('#order-search [name="player"]').fill('member');await page.locator('#order-search button').click();await page.waitForFunction(()=>document.querySelectorAll('#orders-body tr').length===1);assert.match(await page.locator('#orders-body').textContent(),/88 金幣/);
     assert.equal(await page.locator('#orders-body strong').textContent(),'ORD-000001');
     assert.equal(await page.locator('#orders-body details small').isVisible(),false);
@@ -181,8 +194,11 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     assert.match(await page.locator('#orders-body').textContent(),/88 coins/);
     assert.match(await page.locator('#orders-body').textContent(),/Completed/);
     assert.equal(await page.locator('#order-summary').textContent(),'Total transactions: 1');
+    assert.equal(await page.locator('#orders-body tr td').nth(2).textContent(),'Deepsea Duo Packbrowser-product');
+    assert.equal(sqlite.prepare("SELECT product_name FROM purchase_orders WHERE id='browser-order'").get().product_name,'深海雙卡組合');
     assert.equal(await page.locator('#order-search [name="player"]').inputValue(),'member');
     await page.locator('#admin-language').selectOption('zh-TW');
+    assert.equal(await page.locator('#orders-body tr td').nth(2).textContent(),'深海雙卡組合browser-product');
     await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     await page.locator('[data-tab="cards"]').click();await page.locator('#search').fill('');
     if(process.env.ADMIN_SCREENSHOT)await page.screenshot({path:process.env.ADMIN_SCREENSHOT});

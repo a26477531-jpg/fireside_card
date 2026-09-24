@@ -1,4 +1,4 @@
-import {t, getLanguage, setLanguage, applyLanguage, cardName, collectionName} from './admin-i18n.js';
+import {t, getLanguage, setLanguage, applyLanguage, cardName, collectionName, bundleName} from './admin-i18n.js';
 import {languages, fingerprint, translationState} from './translation-workflow.js';
 'use strict';
 (() => {
@@ -55,10 +55,10 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
     $('list-help').textContent=isCard?t('草稿可先保存，上架後才會顯示於卡牌庫。'):t('以整數金幣設定售價；修改會更新商城，不會改寫歷史訂單。');
     $('create').textContent=isCard?t('＋ 建立卡牌'):t('＋ 建立商品');
     const q=$('search').value.trim().toLowerCase(),status=$('status').value;
-    const rows=(isCard?cards:products).filter(r=>(!status||r.status===status)&&[r.id,r.name,...(isCard?Object.values(r.translations||{}).map(v=>v.name):[])].join(' ').toLowerCase().includes(q));
+    const rows=(isCard?cards:products).filter(r=>(!status||r.status===status)&&[r.id,r.name,...(isCard?Object.values(r.translations||{}).map(v=>v.name):[bundleName(r.name,'en')])].join(' ').toLowerCase().includes(q));
     $('count').textContent=t('顯示 {shown} 筆，共 {total} 筆',{shown:rows.length,total:(isCard?cards:products).length});
     $('catalog-head').innerHTML=`<tr><th>${isCard?t('卡牌'):t('商品')}</th><th>${isCard?t('系列／數值'):t('內容／金幣售價')}</th><th>${t('狀態')}</th><th>${t('操作')}</th></tr>`;
-    $('catalog-body').innerHTML=rows.map(r=>`<tr><td>${isCard?`<img src="${esc(r.image)}" alt="" loading="lazy">`:''}${esc(isCard?cardName(r):r.name)}<small>${esc(r.id)}</small></td><td>${isCard?`${esc(collectionName(r.collection))}<small>${t('法力')} ${r.mana} · ${t('攻擊')} ${r.attack} · ${t('生命')} ${r.health}</small>`:`${r.coinPrice.toLocaleString()} ${t('金幣')}<small>${r.cardIds.map(id=>esc(cardName(cards.find(c=>c.id===id))||id)).join(getLanguage()==='en'?', ':'、')}</small>`}</td><td>${badge(r.status)}</td><td><button data-edit="${esc(r.id)}">${t('編輯')}</button></td></tr>`).join('');
+    $('catalog-body').innerHTML=rows.map(r=>`<tr><td>${isCard?`<img src="${esc(r.image)}" alt="" loading="lazy">`:''}${esc(isCard?cardName(r):bundleName(r.name))}<small>${esc(r.id)}</small></td><td>${isCard?`${esc(collectionName(r.collection))}<small>${t('法力')} ${r.mana} · ${t('攻擊')} ${r.attack} · ${t('生命')} ${r.health}</small>`:`${r.coinPrice.toLocaleString()} ${t('金幣')}<small>${r.cardIds.map(id=>esc(cardName(cards.find(c=>c.id===id))||id)).join(getLanguage()==='en'?', ':'、')}</small>`}</td><td>${badge(r.status)}</td><td><button data-edit="${esc(r.id)}">${t('編輯')}</button></td></tr>`).join('');
     $('catalog-empty').hidden=rows.length>0;
   }
   async function reload() {
@@ -174,7 +174,7 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
   }
   let lastOrders=null;
   function renderOrders(data) {
-      $('orders-body').innerHTML=data.orders.map(o=>`<tr><td><strong>${esc(o.order_number || o.id)}</strong><small>${esc(o.created_at)}</small><details class="order-reference"><summary>${t('完整識別碼')}</summary><small>${esc(o.id)}</small></details></td><td>${esc(o.player_username)}<small>ID ${esc(o.user_id??t('已刪除'))} · ${esc(o.player_email)}</small></td><td>${esc(o.product_name)}<small>${esc(o.product_id)}</small></td><td>${o.quantity}</td><td>${o.total.toLocaleString()} ${o.currency==='COIN'?t('金幣'):esc(o.currency)}<small>${t('單價')} ${o.unit_price.toLocaleString()}</small></td><td>${badge(o.status)}</td></tr>`).join('');
+      $('orders-body').innerHTML=data.orders.map(o=>`<tr><td><strong>${esc(o.order_number || o.id)}</strong><small>${esc(o.created_at)}</small><details class="order-reference"><summary>${t('完整識別碼')}</summary><small>${esc(o.id)}</small></details></td><td>${esc(o.player_username)}<small>ID ${esc(o.user_id??t('已刪除'))} · ${esc(o.player_email)}</small></td><td>${esc(bundleName(o.product_name))}<small>${esc(o.product_id)}</small></td><td>${o.quantity}</td><td>${o.total.toLocaleString()} ${o.currency==='COIN'?t('金幣'):esc(o.currency)}<small>${t('單價')} ${o.unit_price.toLocaleString()}</small></td><td>${badge(o.status)}</td></tr>`).join('');
       $('orders-empty').hidden=data.orders.length>0;$('order-summary').textContent=t('共 {total} 筆交易',{total:data.total});$('page').textContent=`${page} / ${Math.max(1,Math.ceil(data.total/25))}`;$('prev').disabled=page<=1;$('next').disabled=page*25>=data.total;
   }
   document.querySelectorAll('[data-tab]').forEach(button=>button.onclick=()=>{tab=button.dataset.tab;document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));$('catalog-panel').hidden=tab==='orders';$('orders-panel').hidden=tab!=='orders';$('notice').textContent='';if(tab==='orders')orders();else render();});

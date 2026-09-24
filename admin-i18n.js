@@ -78,6 +78,15 @@ export function cardName(card) {
 export function collectionName(value) {
   return language === 'en' ? englishCollections[value] || value : value;
 }
+// Match the saved name, not the product ID, so renamed products and order snapshots stay accurate.
+const englishBundles = {
+  '深海雙卡組合':'Deepsea Duo Pack',
+  '荒野雙卡組合':'Wildland Duo Pack',
+  '烈焰雙卡組合':'Inferno Duo Pack'
+};
+export function bundleName(name, locale = language) {
+  return locale === 'en' ? englishBundles[name] || name : name;
+}
 const messages = new Map();
 export function t(key, values = {}) {
   const result = (language === 'en' ? english[key] ?? key : key).replace(/\{(\w+)\}/g, (match, name) => values[name] ?? match);
