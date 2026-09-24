@@ -10,7 +10,10 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
   Object.assign(errors,{'translation-unavailable':'尚未設定 Google 翻譯服務。可取消自動翻譯後儲存草稿。','translation-failed':'翻譯失敗或數值驗證未通過，原有內容已保留，請重試。','translation-review-required':'請先確認所有語言翻譯，再上架。'});
   async function api(url,options={}) {
     const response=await fetch(url,{credentials:'same-origin',cache:'no-store',...options});
-    let data; try {data=await response.json();} catch {throw new Error('無法讀取後台資料。請確認 API 已部署且資料庫已初始化。');}
+    let data; try {data=await response.json();} catch {
+      const error=new Error(`伺服器回應格式異常（HTTP ${response.status}，${url.split('?')[0]}）。請提供此訊息以便查詢；已填內容仍保留。`);
+      error.code=url==='/api/admin/translate'?'translation-failed':'invalid-response';throw error;
+    }
     if(!response.ok || !data.ok) {
       if(response.status===401 || response.status===403){$('workspace').hidden=true;$('access').hidden=false;$('access').textContent=errors[data.error]||'無法存取後台';}
       const error=new Error(errors[data.error]||'讀取或儲存失敗，請稍後重試。');error.code=data.error;throw error;

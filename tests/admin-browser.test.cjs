@@ -57,6 +57,10 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     assert.match(await page.locator('#notice').textContent(),/已儲存草稿.*自動翻譯未完成/);
     assert.equal(translationCalls,3);failTranslation=false;
     await page.locator('[data-edit="browser-card"]').click();await page.locator('#translation-panel summary').click();
+    await page.route('**/api/admin/translate',route=>route.fulfill({status:502,contentType:'text/html',body:'<html>Gateway error</html>'}),{times:1});
+    await page.locator('#translate-missing').click();
+    await page.waitForFunction(()=>document.querySelector('#form-error').textContent.includes('HTTP 502'));
+    assert.match(await page.locator('#form-error').textContent(),/\/api\/admin\/translate/);
     await page.locator('#translate-missing').click();
     await page.waitForFunction(()=>document.querySelector('#translation-status').textContent.includes('自動翻譯'));
     assert.match(await page.locator('#translation-status').textContent(),/自動翻譯/);
