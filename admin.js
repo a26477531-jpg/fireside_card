@@ -1,4 +1,4 @@
-import {t, getLanguage, setLanguage, applyLanguage} from './admin-i18n.js';
+import {t, getLanguage, setLanguage, applyLanguage, cardName, collectionName} from './admin-i18n.js';
 import {languages, fingerprint, translationState} from './translation-workflow.js';
 'use strict';
 (() => {
@@ -55,10 +55,10 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
     $('list-help').textContent=isCard?t('草稿可先保存，上架後才會顯示於卡牌庫。'):t('以整數金幣設定售價；修改會更新商城，不會改寫歷史訂單。');
     $('create').textContent=isCard?t('＋ 建立卡牌'):t('＋ 建立商品');
     const q=$('search').value.trim().toLowerCase(),status=$('status').value;
-    const rows=(isCard?cards:products).filter(r=>(!status||r.status===status)&&`${r.id} ${r.name}`.toLowerCase().includes(q));
+    const rows=(isCard?cards:products).filter(r=>(!status||r.status===status)&&[r.id,r.name,...(isCard?Object.values(r.translations||{}).map(v=>v.name):[])].join(' ').toLowerCase().includes(q));
     $('count').textContent=t('顯示 {shown} 筆，共 {total} 筆',{shown:rows.length,total:(isCard?cards:products).length});
     $('catalog-head').innerHTML=`<tr><th>${isCard?t('卡牌'):t('商品')}</th><th>${isCard?t('系列／數值'):t('內容／金幣售價')}</th><th>${t('狀態')}</th><th>${t('操作')}</th></tr>`;
-    $('catalog-body').innerHTML=rows.map(r=>`<tr><td>${isCard?`<img src="${esc(r.image)}" alt="" loading="lazy">`:''}${esc(r.name)}<small>${esc(r.id)}</small></td><td>${isCard?`${esc(r.collection)}<small>${t('法力')} ${r.mana} · ${t('攻擊')} ${r.attack} · ${t('生命')} ${r.health}</small>`:`${r.coinPrice.toLocaleString()} ${t('金幣')}<small>${r.cardIds.map(id=>esc(cards.find(c=>c.id===id)?.name||id)).join('、')}</small>`}</td><td>${badge(r.status)}</td><td><button data-edit="${esc(r.id)}">${t('編輯')}</button></td></tr>`).join('');
+    $('catalog-body').innerHTML=rows.map(r=>`<tr><td>${isCard?`<img src="${esc(r.image)}" alt="" loading="lazy">`:''}${esc(isCard?cardName(r):r.name)}<small>${esc(r.id)}</small></td><td>${isCard?`${esc(collectionName(r.collection))}<small>${t('法力')} ${r.mana} · ${t('攻擊')} ${r.attack} · ${t('生命')} ${r.health}</small>`:`${r.coinPrice.toLocaleString()} ${t('金幣')}<small>${r.cardIds.map(id=>esc(cardName(cards.find(c=>c.id===id))||id)).join(getLanguage()==='en'?', ':'、')}</small>`}</td><td>${badge(r.status)}</td><td><button data-edit="${esc(r.id)}">${t('編輯')}</button></td></tr>`).join('');
     $('catalog-empty').hidden=rows.length>0;
   }
   async function reload() {
@@ -132,7 +132,7 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
       translationLanguage=languages.find(l=>l!==sourceLanguage);$('translation-language').value=translationLanguage;$('auto-translate').checked=!editing;$('translation-panel').open=false;showTranslation();
       $('collection-options').innerHTML=[...new Set(cards.map(c=>c.collection))].map(v=>`<option value="${esc(v)}"></option>`).join('');
     } else {
-      $('product-cards').innerHTML=cards.map(c=>`<label><input type="checkbox" value="${esc(c.id)}" ${editing?.cardIds.includes(c.id)?'checked':''}>${esc(c.name)} (<span data-product-status="${esc(c.status)}">${esc(t(statusNames[c.status]))}</span>)</label>`).join('');
+      $('product-cards').innerHTML=cards.map(c=>`<label><input type="checkbox" value="${esc(c.id)}" ${editing?.cardIds.includes(c.id)?'checked':''}><span data-card-name="${esc(c.id)}">${esc(cardName(c))}</span> (<span data-product-status="${esc(c.status)}">${esc(t(statusNames[c.status]))}</span>)</label>`).join('');
     }
     $('unsaved-warning').hidden=true;savedEditorState=editorState();
     $('editor').showModal();field(editing?'name':'id').focus();
@@ -207,7 +207,7 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
     setLanguage($('admin-language').value);
     if(tab==='orders'){if(lastOrders)renderOrders(lastOrders);}else render();
     if($('editor').open && tab==='cards' && !translating)updateTranslationStatus();
-    // Product labels contain catalog names; update only the status text.
+    document.querySelectorAll('[data-card-name]').forEach(el=>el.textContent=cardName(cards.find(c=>c.id===el.dataset.cardName))||el.dataset.cardName);
     document.querySelectorAll('[data-product-status]').forEach(el=>el.textContent=t(statusNames[el.dataset.productStatus]));
   };
   (async()=>{try{const {user}=await api('/api/me');if(!user){$('access').innerHTML=`<span data-i18n="請先以管理員帳號">${t('請先以管理員帳號')}</span><a href="login.html" data-i18n="登入">${t('登入')}</a><span data-i18n="。">${t('。')}</span>`;return;}if(user.role!=='admin'){$('access').textContent=t('此帳號沒有管理權限。');return;}$('admin-name').textContent=user.username;$('access').hidden=true;$('workspace').hidden=false;await reload();}catch(e){$('access').textContent=e.message;}})();

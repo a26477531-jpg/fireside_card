@@ -38,15 +38,36 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     const page=await context.newPage();const errors=[];page.on('pageerror',e=>{errors.push(e.message);console.error(e.message);});
     page.on('response',async r=>{if(r.url().includes('/api/') && r.status()>=400)console.error(r.status(),await r.text());});
     await page.goto(base+'/admin.html');await page.waitForFunction(()=>document.querySelectorAll('#catalog-body tr').length===31);
-    // Interface language persists without changing catalog text, filters, or form data.
+    // Display card translations while preserving stored source text and form values.
     const originalName=await page.locator('#catalog-body tr').first().locator('td').first().textContent();
+    const originalCatalog=sqlite.prepare('SELECT id,data FROM catalog_cards ORDER BY id').all();
+    const firstCard=JSON.parse(originalCatalog[0].data);
     await page.locator('#admin-language').selectOption('en');
     assert.equal(await page.locator('html').getAttribute('lang'),'en');
     assert.equal(await page.title(),'Admin | Fireside Cards');
     assert.equal(await page.locator('h1').textContent(),'Admin workspace');
     assert.equal(await page.locator('#search').getAttribute('placeholder'),'Enter keywords');
-    assert.equal(await page.locator('#catalog-body tr').first().locator('td').first().textContent(),originalName);
+    assert.equal(await page.locator('#catalog-body tr').first().locator('td').first().textContent(),firstCard.translations.en.name+originalCatalog[0].id);
+    const collectionNames={'深海軍團':'Deepsea Legion','荒野之盟':'Wildland Alliance','暗影領域':'Shadow Realm'};
+    for(const row of originalCatalog){
+      const card=JSON.parse(row.data), rendered=page.locator(`#catalog-body tr:has([data-edit="${row.id}"])`);
+      assert.equal(await rendered.locator('td').first().textContent(),card.translations.en.name+row.id);
+      assert.ok((await rendered.locator('td').nth(1).textContent()).startsWith(collectionNames[card.collection]));
+    }
     assert.match(await page.locator('#count').textContent(),/Showing 31 of 31/);
+    await page.locator('#search').fill(firstCard.translations.en.name);
+    assert.ok(await page.locator(`[data-edit="${originalCatalog[0].id}"]`).isVisible());
+    await page.locator('#admin-language').selectOption('zh-TW');
+    assert.ok(await page.locator(`[data-edit="${originalCatalog[0].id}"]`).isVisible());
+    await page.locator('#search').fill('');
+    assert.equal(await page.locator('#catalog-body tr').first().locator('td').first().textContent(),originalName);
+    await page.locator('#admin-language').selectOption('en');
+    await page.locator(`[data-edit="${originalCatalog[0].id}"]`).click();
+    assert.equal(await page.locator('#edit-form [name="name"]').inputValue(),firstCard.name);
+    assert.equal(await page.locator('#edit-form [name="collection"]').inputValue(),firstCard.collection);
+    await page.locator('#cancel').click();
+    assert.deepEqual(sqlite.prepare('SELECT id,data FROM catalog_cards ORDER BY id').all(),originalCatalog);
+    assert.equal(translationCalls,0);
     await page.reload();await page.waitForFunction(()=>document.querySelectorAll('#catalog-body tr').length===31);
     assert.equal(await page.locator('#admin-language').inputValue(),'en');
     await page.locator('#create').click();
@@ -68,9 +89,13 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     await page.locator('[data-tab="products"]').click();
     assert.equal(await page.locator('#list-title').textContent(),'Products & coin prices');
+    const firstProduct=JSON.parse(sqlite.prepare('SELECT data FROM catalog_products ORDER BY updated_at DESC,id LIMIT 1').get().data);
+    const included=firstProduct.cardIds.map(id=>JSON.parse(originalCatalog.find(c=>c.id===id).data).translations.en.name);
+    for(const name of included)assert.ok((await page.locator('#catalog-body tr').first().locator('td').nth(1).textContent()).includes(name));
     await page.locator('#create').click();
     assert.equal(await page.locator('#editor-title').textContent(),'Create product');
     assert.match(await page.locator('#product-cards').textContent(),/Published/);
+    assert.equal(await page.locator(`[data-card-name="${originalCatalog[0].id}"]`).textContent(),firstCard.translations.en.name);
     await page.locator('#cancel').click();
     await page.locator('[data-tab="cards"]').click();
     await page.locator('#search').fill('no-matching-record');
@@ -101,6 +126,10 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     assert.match(await page.locator('#notice').textContent(),/已儲存草稿.*自動翻譯未完成/);
     const savedDraft=JSON.parse(sqlite.prepare("SELECT data FROM catalog_cards WHERE id='browser-card'").get().data);
     assert.equal(savedDraft.name,'瀏覽器測試卡');assert.equal(savedDraft.abilities[0].text,'測試規則文字');
+    await page.locator('#admin-language').selectOption('en');
+    assert.equal(await page.locator('#catalog-body tr td').first().textContent(),'瀏覽器測試卡browser-card');
+    assert.ok((await page.locator('#catalog-body tr td').nth(1).textContent()).startsWith('新系列'));
+    await page.locator('#admin-language').selectOption('zh-TW');
     await page.locator('[data-edit="browser-card"]').click();
     await page.locator('#translation-panel summary').click();
     missingTranslationKey=false;failTranslation=true;

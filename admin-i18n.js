@@ -1,4 +1,4 @@
-// Interface copy only. Catalog content and translation source languages stay unchanged.
+// Display translations only. Stored catalog content and source languages stay unchanged.
 export const english = {
   '管理後台｜爐邊卡牌':'Admin | Fireside Cards',
   '✦ 爐邊卡牌':'✦ Fireside Cards', '管理後台':'Administration', '前往商城 ↗':'Visit shop ↗',
@@ -68,6 +68,16 @@ try {
   if (saved === 'en') language = 'en';
 } catch {}
 export const getLanguage = () => language;
+// Use the same collection names as the public card library.
+const englishCollections = {'深海軍團':'Deepsea Legion','荒野之盟':'Wildland Alliance','暗影領域':'Shadow Realm'};
+export function cardName(card) {
+  if (!card) return '';
+  if ((card.sourceLanguage || 'zh-TW') === language) return card.name;
+  return card.translations?.[language]?.name?.trim() || card.name;
+}
+export function collectionName(value) {
+  return language === 'en' ? englishCollections[value] || value : value;
+}
 const messages = new Map();
 export function t(key, values = {}) {
   const result = (language === 'en' ? english[key] ?? key : key).replace(/\{(\w+)\}/g, (match, name) => values[name] ?? match);
