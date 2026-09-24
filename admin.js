@@ -10,13 +10,13 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
   let translationMeta={},translating=false;
   let savedEditorState='';
   function editorState(){
-    if(tab==='cards')saveTranslation();
+    saveTranslation();
     const values=[...form.querySelectorAll('input,textarea,select')]
       .filter(el=>!el.closest('#translation-panel') && !el.closest(tab==='cards'?'#product-fields':'#card-fields'))
       .map(el=>[el.name||el.id||el.dataset.title||el.dataset.text||'',el.type==='checkbox'?el.checked:el.value]);
     const ordered=value=>Array.isArray(value)?value.map(ordered):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,ordered(value[key])])):value;
     const unfinished=tab==='cards'&&!field('translatedName').value.trim()?[field('translatedSubtitle').value,[...$('translated-abilities').querySelectorAll('input,textarea')].map(el=>el.value)]:['',[]];
-    return JSON.stringify(ordered({values,translations:tab==='cards'?translations:null,meta:tab==='cards'?translationMeta:null,unfinished}));
+    return JSON.stringify(ordered({values,translations,meta:translationMeta,unfinished}));
   }
   const hasUnsavedChanges=()=>$('editor').open && editorState()!==savedEditorState;
   function requestEditorClose(){
@@ -40,7 +40,7 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
     const response=await fetch(url,{credentials:'same-origin',cache:'no-store',...options});
     let data; try {data=await response.json();} catch {
       const error=new Error(t('伺服器回應格式異常（HTTP {status}，{url}）。請提供此訊息以便查詢；已填內容仍保留。',{status:response.status,url:url.split('?')[0]}));
-      error.code=url==='/api/admin/translate'?'translation-failed':'invalid-response';throw error;
+      error.code=url.startsWith('/api/admin/translate')?'translation-failed':'invalid-response';throw error;
     }
     if(!response.ok || !data.ok) {
       if(response.status===401 || response.status===403){$('workspace').hidden=true;$('access').hidden=false;$('access').textContent=t(errors[data.error]||'')||t('無法存取後台');}
@@ -55,10 +55,10 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
     $('list-help').textContent=isCard?t('草稿可先保存，上架後才會顯示於卡牌庫。'):t('以整數金幣設定售價；修改會更新商城，不會改寫歷史訂單。');
     $('create').textContent=isCard?t('＋ 建立卡牌'):t('＋ 建立商品');
     const q=$('search').value.trim().toLowerCase(),status=$('status').value;
-    const rows=(isCard?cards:products).filter(r=>(!status||r.status===status)&&[r.id,r.name,...(isCard?Object.values(r.translations||{}).map(v=>v.name):[bundleName(r.name,'en')])].join(' ').toLowerCase().includes(q));
+    const rows=(isCard?cards:products).filter(r=>(!status||r.status===status)&&[r.id,r.name,...(isCard?Object.values(r.translations||{}).map(v=>v.name):[bundleName(r,'en'),...Object.values(r.translations||{}).map(v=>v.name)])].join(' ').toLowerCase().includes(q));
     $('count').textContent=t('顯示 {shown} 筆，共 {total} 筆',{shown:rows.length,total:(isCard?cards:products).length});
     $('catalog-head').innerHTML=`<tr><th>${isCard?t('卡牌'):t('商品')}</th><th>${isCard?t('系列／數值'):t('內容／金幣售價')}</th><th>${t('狀態')}</th><th>${t('操作')}</th></tr>`;
-    $('catalog-body').innerHTML=rows.map(r=>`<tr><td>${isCard?`<img src="${esc(r.image)}" alt="" loading="lazy">`:''}${esc(isCard?cardName(r):bundleName(r.name))}<small>${esc(r.id)}</small></td><td>${isCard?`${esc(collectionName(r.collection))}<small>${t('法力')} ${r.mana} · ${t('攻擊')} ${r.attack} · ${t('生命')} ${r.health}</small>`:`${r.coinPrice.toLocaleString()} ${t('金幣')}<small>${r.cardIds.map(id=>esc(cardName(cards.find(c=>c.id===id))||id)).join(getLanguage()==='en'?', ':'、')}</small>`}</td><td>${badge(r.status)}</td><td><button data-edit="${esc(r.id)}">${t('編輯')}</button></td></tr>`).join('');
+    $('catalog-body').innerHTML=rows.map(r=>`<tr><td>${isCard?`<img src="${esc(r.image)}" alt="" loading="lazy">`:''}${esc(isCard?cardName(r):bundleName(r))}<small>${esc(r.id)}</small></td><td>${isCard?`${esc(collectionName(r.collection))}<small>${t('法力')} ${r.mana} · ${t('攻擊')} ${r.attack} · ${t('生命')} ${r.health}</small>`:`${r.coinPrice.toLocaleString()} ${t('金幣')}<small>${r.cardIds.map(id=>esc(cardName(cards.find(c=>c.id===id))||id)).join(getLanguage()==='en'?', ':'、')}</small>`}</td><td>${badge(r.status)}</td><td><button data-edit="${esc(r.id)}">${t('編輯')}</button></td></tr>`).join('');
     $('catalog-empty').hidden=rows.length>0;
   }
   async function reload() {
@@ -77,10 +77,11 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
     const name=field('translatedName').value.trim();
     if(!name){delete translations[translationLanguage];delete translationMeta[translationLanguage];return;}
     const previous=translations[translationLanguage];
-    translations[translationLanguage]={name,subtitle:field('translatedSubtitle').value.trim(),abilities:[...$('translated-abilities').children].map(r=>({title:r.querySelector('[data-title]').value.trim(),text:r.querySelector('[data-text]').value.trim()}))};
+    translations[translationLanguage]=tab==='products'?{name,subtitle:'',abilities:[]}:{name,subtitle:field('translatedSubtitle').value.trim(),abilities:[...$('translated-abilities').children].map(r=>({title:r.querySelector('[data-title]').value.trim(),text:r.querySelector('[data-text]').value.trim()}))};
     if(JSON.stringify(previous)!==JSON.stringify(translations[translationLanguage]))markTranslation('edited');
   }
   function sourceContent() {
+    if(tab==='products')return {name:field('name').value.trim(),subtitle:'',abilities:[]};
     return {name:field('name').value.trim(),subtitle:field('subtitle').value.trim(),abilities:[...$('abilities').children].map(r=>({title:r.querySelector('[data-title]').value.trim(),text:r.querySelector('[data-text]').value.trim()}))};
   }
   function markTranslation(status) {translationMeta[translationLanguage]={status,source:fingerprint(sourceContent()),sourceLanguage:$('source-language').value};}
@@ -92,7 +93,7 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
   async function generateTranslations(current=false) {
     saveTranslation();
     const source=sourceContent(),sourceLanguage=$('source-language').value;
-    if(!source.name || source.abilities.some(a=>!a.title||!a.text))throw new Error(t('請先填寫原文名稱及完整技能。'));
+    if(!source.name || source.abilities.some(a=>!a.title||!a.text))throw new Error(t(tab==='cards'?'請先填寫原文名稱及完整技能。':'請先填寫原文名稱。'));
     const targets=current?[translationLanguage]:languages.filter(l=>l!==sourceLanguage&&!translations[l]);
     if(!targets.length)return;
     if(current && translations[translationLanguage] && !window.confirm(t('重新翻譯會取代此語言的現有內容（包含人工修改），確定繼續？')))return;
@@ -100,7 +101,7 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
     const controls=[...form.querySelectorAll('input,textarea,select,button')],disabled=controls.map(el=>el.disabled);
     controls.forEach(el=>el.disabled=true);$('translation-status').textContent=t('正在翻譯，請稍候…');
     try {
-      const result=await api('/api/admin/translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source,sourceLanguage,targets}),signal:AbortSignal.timeout(60000)});
+      const result=await api(tab==='cards'?'/api/admin/translate':'/api/admin/translate-product',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source,sourceLanguage,targets}),signal:AbortSignal.timeout(60000)});
       for(const lang of targets){translations[lang]=result.translations[lang];translationMeta[lang]={status:'machine',source:fingerprint(source),sourceLanguage};}
       showTranslation();
     }finally{controls.forEach((el,i)=>el.disabled=disabled[i]);translating=false;updateTranslationStatus();}
@@ -124,16 +125,19 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
     field('coinPrice').required=!isCard;
     if(isCard){
       for(const a of editing?.abilities||[])addAbility(a);
-      translations=structuredClone(editing?.translations||{});translationMeta=structuredClone(editing?.translationMeta||{});
-      $('source-language').value=editing?.sourceLanguage||'zh-TW';$('source-language').disabled=Boolean(editing);
-      const sourceLanguage=$('source-language').value;delete translations[sourceLanguage];
-      for(const lang of Object.keys(translations))if(!translationMeta[lang])translationMeta[lang]={status:'reviewed',source:fingerprint(sourceContent()),sourceLanguage};
-      for(const option of $('translation-language').options)option.disabled=option.value===sourceLanguage;
-      translationLanguage=languages.find(l=>l!==sourceLanguage);$('translation-language').value=translationLanguage;$('auto-translate').checked=!editing;$('translation-panel').open=false;showTranslation();
       $('collection-options').innerHTML=[...new Set(cards.map(c=>c.collection))].map(v=>`<option value="${esc(v)}"></option>`).join('');
     } else {
       $('product-cards').innerHTML=cards.map(c=>`<label><input type="checkbox" value="${esc(c.id)}" ${editing?.cardIds.includes(c.id)?'checked':''}><span data-card-name="${esc(c.id)}">${esc(cardName(c))}</span> (<span data-product-status="${esc(c.status)}">${esc(t(statusNames[c.status]))}</span>)</label>`).join('');
     }
+    translations=structuredClone(editing?.translations||{});translationMeta=structuredClone(editing?.translationMeta||{});
+    $('source-language').value=editing?.sourceLanguage||'zh-TW';$('source-language').disabled=Boolean(editing);
+    const sourceLanguage=$('source-language').value;delete translations[sourceLanguage];
+    for(const lang of Object.keys(translations))if(!translationMeta[lang])translationMeta[lang]={status:'reviewed',source:fingerprint(sourceContent()),sourceLanguage};
+    for(const option of $('translation-language').options)option.disabled=option.value===sourceLanguage;
+    translationLanguage=languages.find(l=>l!==sourceLanguage);$('translation-language').value=translationLanguage;$('auto-translate').checked=!editing;$('translation-panel').open=false;showTranslation();
+
+    field('translatedSubtitle').closest('label').hidden=!isCard;field('translatedSubtitle').disabled=!isCard;
+    $('translated-abilities').hidden=!isCard;$('add-translated-ability').hidden=!isCard;$('add-translated-ability').disabled=!isCard;
     $('unsaved-warning').hidden=true;savedEditorState=editorState();
     $('editor').showModal();field(editing?'name':'id').focus();
   }
@@ -151,16 +155,16 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
       for(const key of ['subtitle','image','collection'])body[key]=field(key).value.trim();
       for(const key of ['mana','attack','health'])body[key]=Number(field(key).value);
       body.abilities=[...$('abilities').children].map(r=>({title:r.querySelector('[data-title]').value.trim(),text:r.querySelector('[data-text]').value.trim()}));
-      saveTranslation();
-      if($('auto-translate').checked){try{await generateTranslations();}catch(e){
-        const canSaveDraft=body.status==='draft' && (e.code?.startsWith('translation-')||['TypeError','TimeoutError','AbortError'].includes(e.name));
-        if(!canSaveDraft){$('form-error').textContent=e.message;return;}
-        translationWarning=t('已儲存草稿；自動翻譯未完成，原文與既有譯文已保留。請稍後編輯此卡牌，按「自動補齊翻譯」。');
-      }}
-      body.translations=translations;body.translationMeta=translationMeta;body.sourceLanguage=$('source-language').value;
-      if(body.status==='active' && languages.some(l=>l!==body.sourceLanguage && translationState(body,l)!=='reviewed')){$('form-error').textContent=t('請先將卡牌存為草稿，確認所有語言翻譯後再上架。');$('translation-panel').open=true;return;}
       for(const key of ['nameLayout','rulesLayout'])if(editing?.[key])body[key]=editing[key];
     } else {body.coinPrice=Number(field('coinPrice').value);body.cardIds=[...$('product-cards').querySelectorAll('input:checked')].map(i=>i.value);if(!body.cardIds.length){$('form-error').textContent=t('請至少選一張卡牌。');return;}}
+    saveTranslation();
+    if($('auto-translate').checked){try{await generateTranslations();}catch(e){
+      const canSaveDraft=body.status==='draft' && (e.code?.startsWith('translation-')||['TypeError','TimeoutError','AbortError'].includes(e.name));
+      if(!canSaveDraft){$('form-error').textContent=e.message;return;}
+      translationWarning=t('已儲存草稿；自動翻譯未完成，原文與既有譯文已保留。請稍後編輯，按「自動補齊翻譯」。');
+    }}
+    body.translations=translations;body.translationMeta=translationMeta;body.sourceLanguage=$('source-language').value;
+    if(body.status==='active' && languages.some(l=>l!==body.sourceLanguage && translationState(body,l)!=='reviewed')){$('form-error').textContent=t('請先存為草稿，確認所有語言翻譯後再上架。');$('translation-panel').open=true;return;}
     saving=true;$('save').disabled=true;$('save').textContent=t('儲存中…');$('form-error').textContent='';
     try{const result=await api('/api/admin/'+tab,{method:editing?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const items=tab==='cards'?cards:products;const i=items.findIndex(r=>r.id===result.item.id);if(i>=0)items[i]=result.item;else items.unshift(result.item);render();$('editor').close();$('notice').textContent=translationWarning||t('已儲存，前台重新整理後會載入最新資料。');}
     catch(e){$('form-error').textContent=e.message;}
@@ -189,7 +193,7 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
   };
   for(const [id,current] of [['translate-missing',false],['translate-current',true]])$(id).onclick=async()=>{if(translating||saving)return;$('form-error').textContent='';try{await generateTranslations(current);}catch(e){$('form-error').textContent=e.message;}};
   $('review-translation').onclick=()=>{saveTranslation();if(!translations[translationLanguage]){$('form-error').textContent=t('請先填寫翻譯。');return;}markTranslation('reviewed');updateTranslationStatus();};
-  form.addEventListener('input',()=>{if(tab==='cards'){saveTranslation();updateTranslationStatus();}});
+  form.addEventListener('input',()=>{saveTranslation();updateTranslationStatus();});
   $('abilities').addEventListener('click',()=>updateTranslationStatus());
   $('translated-abilities').addEventListener('click',()=>{saveTranslation();updateTranslationStatus();});
   $('translation-language').onchange=()=>{saveTranslation();translationLanguage=$('translation-language').value;showTranslation();};
@@ -206,7 +210,7 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
   $('admin-language').onchange=()=>{
     setLanguage($('admin-language').value);
     if(tab==='orders'){if(lastOrders)renderOrders(lastOrders);}else render();
-    if($('editor').open && tab==='cards' && !translating)updateTranslationStatus();
+    if($('editor').open && !translating)updateTranslationStatus();
     document.querySelectorAll('[data-card-name]').forEach(el=>el.textContent=cardName(cards.find(c=>c.id===el.dataset.cardName))||el.dataset.cardName);
     document.querySelectorAll('[data-product-status]').forEach(el=>el.textContent=t(statusNames[el.dataset.productStatus]));
   };

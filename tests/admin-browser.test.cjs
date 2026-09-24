@@ -8,9 +8,11 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
   const {DB,sqlite}=database();
   const routes={};let translationCalls=0,failTranslation=false,missingTranslationKey=true;
   const googleFetch=async(url,options)=>{translationCalls++;if(failTranslation)return new Response('{}',{status:503});const payload=JSON.parse(options.body);return Response.json({data:{translations:payload.q.map((text,i)=>({translatedText:i===0?payload.target+' translated':text}))}});};
-  for(const name of ['admin/translate','admin/cards','admin/products','admin/orders','catalog','me','favorites','purchases','my-cards'])routes['/api/'+name]=await import('../functions/api/'+name+'.js');
+  for(const name of ['admin/translate','admin/translate-product','admin/cards','admin/products','admin/orders','catalog','me','favorites','purchases','my-cards'])routes['/api/'+name]=await import('../functions/api/'+name+'.js');
   const translateRoute=routes['/api/admin/translate'];
   routes['/api/admin/translate']={onRequestPost:[...translateRoute.onRequestPost.slice(0,-1),ctx=>translateRoute.translate(ctx,googleFetch)]};
+  const productTranslateRoute=routes['/api/admin/translate-product'];
+  routes['/api/admin/translate-product']={onRequestPost:[...productTranslateRoute.onRequestPost.slice(0,-1),ctx=>productTranslateRoute.translateProduct(ctx,googleFetch)]};
   const root=path.resolve(__dirname,'..');
   const types={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.webp':'image/webp'};
   const server=http.createServer(async(req,res)=>{
@@ -175,8 +177,40 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     if(process.env.TRANSLATION_SCREENSHOT)await page.screenshot({path:process.env.TRANSLATION_SCREENSHOT});
     await page.locator('#cancel').click();
     await page.locator('[data-tab="products"]').click();await page.locator('#search').fill('');await page.locator('#create').click();
-    await form.locator('[name="id"]').fill('browser-product');await form.locator('[name="name"]').fill('測試金幣商品');await form.locator('[name="status"]').selectOption('active');await form.locator('[name="coinPrice"]').fill('88');await page.locator('#product-cards input[value="browser-card"]').check();await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
+    await form.locator('[name="id"]').fill('browser-product');await form.locator('[name="name"]').fill('測試金幣商品');await form.locator('[name="coinPrice"]').fill('88');await page.locator('#product-cards input[value="browser-card"]').check();
+    missingTranslationKey=true;await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
+    assert.match(await page.locator('#notice').textContent(),/已儲存草稿.*自動翻譯未完成/);
+    missingTranslationKey=false;
+    await page.locator('[data-edit="browser-product"]').click();await page.locator('#translation-panel summary').click();
+    assert.ok(await form.locator('[name="translatedSubtitle"]').isHidden());
+    assert.ok(await page.locator('#add-translated-ability').isHidden());
+    await page.locator('#translate-missing').click();await page.waitForFunction(()=>document.querySelector('#translation-status').textContent.includes('自動翻譯'));
+    await page.locator('#cancel').click();assert.ok(await page.locator('#unsaved-warning').isVisible());await page.locator('#keep-editing').click();
+    await form.locator('[name="status"]').selectOption('active');await page.locator('#save').click();assert.match(await page.locator('#form-error').textContent(),/草稿/);
+    await form.locator('[name="translatedName"]').fill('Reviewed <Pack>');
+    const productTranslationCalls=translationCalls;await page.locator('#translate-missing').click();assert.equal(translationCalls,productTranslationCalls);
+    failTranslation=true;page.once('dialog',d=>d.accept());await page.locator('#translate-current').click();
+    await page.waitForFunction(()=>document.querySelector('#form-error').textContent.includes('翻譯失敗'));
+    assert.equal(await form.locator('[name="translatedName"]').inputValue(),'Reviewed <Pack>');failTranslation=false;
+    await reviewAll();
+    await form.locator('[name="name"]').fill('修改組合包名稱');await page.locator('#save').click();
+    assert.match(await page.locator('#translation-status').textContent(),/原文已更新/);
+    assert.match(await page.locator('#form-error').textContent(),/草稿/);
+    await form.locator('[name="name"]').fill('測試金幣商品');
+    if(process.env.PRODUCT_TRANSLATION_SCREENSHOT){
+      await page.locator('#translation-language').selectOption('en');await page.locator('#translate-missing').click();
+      await page.locator('#translation-panel').scrollIntoViewIfNeeded();
+      assert.ok(await page.evaluate(()=>document.querySelector('#editor').scrollWidth<=document.querySelector('#editor').clientWidth));
+      await page.screenshot({path:process.env.PRODUCT_TRANSLATION_SCREENSHOT});
+    }
+    await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
+    await page.locator('#admin-language').selectOption('en');
+    assert.equal(await page.locator('#catalog-body tr:has([data-edit="browser-product"]) td').first().textContent(),'Reviewed <Pack>browser-product');
+    await page.locator('#search').fill('Reviewed');assert.equal(await page.locator('#catalog-body tr').count(),1);await page.locator('#search').fill('');
+    await page.locator('#admin-language').selectOption('zh-TW');
     await page.locator('[data-edit="browser-product"]').click();
+    assert.equal(await form.locator('[name="translatedName"]').inputValue(),'Reviewed <Pack>');
+    assert.match(await page.locator('#translation-status').textContent(),/已人工確認/);
     await page.locator('#product-cards input[value="browser-card"]').uncheck();await page.locator('#cancel').click();assert.ok(await page.locator('#unsaved-warning').isVisible());await page.locator('#keep-editing').click();
     await page.locator('#product-cards input[value="browser-card"]').check();await page.locator('#cancel').click();await page.locator('#editor').waitFor({state:'hidden'});
     await page.locator('[data-edit="browser-product"]').click();await form.locator('[name="coinPrice"]').fill('99');
@@ -204,6 +238,10 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     if(process.env.ADMIN_SCREENSHOT)await page.screenshot({path:process.env.ADMIN_SCREENSHOT});
     if(process.env.ADMIN_DESKTOP_SCREENSHOT){await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:process.env.ADMIN_DESKTOP_SCREENSHOT});}
     await page.goto(base+'/shop.html');await page.waitForFunction(()=>document.querySelectorAll('.shop-card').length===4);assert.match(await page.locator('.shop-card').filter({hasText:'測試金幣商品'}).textContent(),/99 金幣/);
+    await page.selectOption('#language','en');await page.locator('.shop-card').filter({hasText:'Reviewed <Pack>'}).waitFor();
+    await page.locator('.shop-card-open[data-bundle="browser-product"]').click();
+    assert.ok((await page.locator('#shop-detail').textContent()).includes('Reviewed <Pack>'));
+    await page.keyboard.press('Escape');await page.selectOption('#language','zh-TW');
     assert.ok(await page.locator('.shop-buy').first().isEnabled());
     await page.goto(base+'/index.html');await page.waitForFunction(()=>window.CARDS.some(c=>c.id==='browser-card'));await page.locator('#search').fill('修改後的卡牌');assert.equal(await page.locator('#cards .card').count(),1);
     await page.locator('#cards .card').click();await page.waitForFunction(()=>!document.querySelector('#favorite-control button').disabled);await page.locator('#favorite-control button').click();await page.waitForFunction(()=>document.querySelector('#favorite-control button').getAttribute('aria-pressed')==='true');

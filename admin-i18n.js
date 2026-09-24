@@ -3,6 +3,10 @@ export const english = {
   '管理後台｜爐邊卡牌':'Admin | Fireside Cards',
   '✦ 爐邊卡牌':'✦ Fireside Cards', '管理後台':'Administration', '前往商城 ↗':'Visit shop ↗',
   '介面語言':'Interface language', '正在確認管理員權限…':'Checking administrator access…',
+  '原文語言':'Source language',
+  '請先填寫原文名稱。':'Enter the source name first.',
+  '已儲存草稿；自動翻譯未完成，原文與既有譯文已保留。請稍後編輯，按「自動補齊翻譯」。':'Draft saved. Automatic translation is incomplete; your source and existing translations are kept. Edit later and select “Fill missing translations”.',
+  '請先存為草稿，確認所有語言翻譯後再上架。':'Save as a draft, then approve all translations before publishing.',
   '管理工作台':'Admin workspace', '維護卡牌、設定商城金幣售價，查詢玩家的購買紀錄。':'Manage cards, set shop prices in coins, and look up player purchases.',
   '後台功能':'Admin sections', '卡牌管理':'Cards', '商品與價格':'Products & prices', '玩家交易':'Player transactions',
   '草稿可先保存，上架後才會顯示於卡牌庫。':'Save cards as drafts. They appear in the library once published.',
@@ -84,7 +88,13 @@ const englishBundles = {
   '荒野雙卡組合':'Wildland Duo Pack',
   '烈焰雙卡組合':'Inferno Duo Pack'
 };
-export function bundleName(name, locale = language) {
+export function bundleName(product, locale = language) {
+  const name=typeof product==='string'?product:product.name;
+  if(typeof product==='object') {
+    if(product.sourceLanguage===locale)return name;
+    const translated=product.translations?.[locale]?.name?.trim();
+    if(translated)return translated;
+  }
   return locale === 'en' ? englishBundles[name] || name : name;
 }
 const messages = new Map();

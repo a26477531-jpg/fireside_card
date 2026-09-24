@@ -36,6 +36,10 @@
     document.documentElement.lang=value;
   }
   function collection(value) {return value==='all' ? t('all') : t('collection')[value] || value;}
+  function product(value) {
+    const name=(value.sourceLanguage||'zh-TW')===language ? value.name : value.translations?.[language]?.name || value.name;
+    return {...value,name};
+  }
   function applyUI() {
     // 這支函式同時給卡牌庫首頁（index.html）跟其他頁面（例如 register.html）用，
     // 後者沒有卡牌庫的篩選列、輪播圖等元素，所以每一段都要先確認元素存在再動作，
@@ -65,5 +69,5 @@
     document.querySelectorAll('[data-slide]').forEach(button=>button.setAttribute('aria-label',`${t('slide')} ${Number(button.dataset.slide)+1}`));
     if($('banner-play')){$('banner-play').textContent=t($('banner-play').dataset.playing==='false'?'play':'pause');$('banner-play').setAttribute('aria-label',$('banner-play').textContent);}
   }
-  window.CardI18n={get language(){return language;},supported,t,card,collection,setLanguage,applyUI};
+  window.CardI18n={get language(){return language;},supported,t,card,product,collection,setLanguage,applyUI};
 })();

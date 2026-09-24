@@ -34,7 +34,7 @@
     const opener=document.activeElement;
     const dialog=document.createElement('dialog');dialog.className='purchase-confirm';dialog.setAttribute('aria-labelledby','purchase-confirm-title');
     const title=document.createElement('h2');title.id='purchase-confirm-title';title.textContent=t('confirm');
-    const description=document.createElement('p');description.textContent=`${bundle.name} — ${saved.expectedPrice} ${t('coins')}. ${t('buyPrompt')}`;
+    const description=document.createElement('p');description.textContent=`${CardI18n.product(bundle).name} — ${saved.expectedPrice} ${t('coins')}. ${t('buyPrompt')}`;
     const message=document.createElement('p');message.setAttribute('role','status');
     const confirm=document.createElement('button');confirm.className='gold-button';confirm.textContent=t('confirm');
     const cancel=document.createElement('button');cancel.className='gold-button';cancel.textContent=t('cancel');

@@ -43,6 +43,9 @@ test('catalog: permissions, create/edit, stale writes, atomic audit, publication
     assert.equal((await invoke(cards.onRequestPut,DB,{method:'PUT',body:active})).status,409);
     assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM admin_audit').get().n,2);
     const product={id:'new-product',name:'新組合',cardIds:[body.id],coinPrice:77,status:'active'};
+    product.sourceLanguage='zh-TW';
+    product.translations=Object.fromEntries(['en','ja','ko'].map(l=>[l,{name:'New pack',subtitle:'',abilities:[]}]));
+    product.translationMeta=Object.fromEntries(['en','ja','ko'].map(l=>[l,{status:'reviewed',source:fingerprint(product),sourceLanguage:'zh-TW'}]));
     assert.equal((await invoke(products.onRequestPost,DB,{method:'POST',body:{...product,coinPrice:-1}})).status,400);
     assert.equal((await invoke(products.onRequestPost,DB,{method:'POST',body:{...product,cardIds:['missing']}})).status,400);
     assert.equal((await invoke(products.onRequestPost,DB,{method:'POST',body:product})).status,201);

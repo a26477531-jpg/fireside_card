@@ -22,11 +22,12 @@ function providerFailure(status,payload){
   if(status===401||status===403)return 'translation-access-denied';
   return 'translation-provider-error';
 }
-export async function translate({request,env}, fetchTranslation=fetch) {
+export async function translate({request,env}, fetchTranslation=fetch, kind='card') {
   if (request.headers.get('Origin') && request.headers.get('Origin') !== new URL(request.url).origin) return json({ok:false,error:'forbidden'},{status:403});
   let body;
   try {const raw=await request.text();if(raw.length>60000)throw Error();body=JSON.parse(raw);} catch {return json({ok:false,error:'invalid-body'},{status:400});}
   if (!body || !locales.includes(body.sourceLanguage) || !translation(body.source) || !Array.isArray(body.targets) || !body.targets.length || body.targets.length>3 || new Set(body.targets).size!==body.targets.length || !body.targets.every(l=>locales.includes(l)&&l!==body.sourceLanguage)) return json({ok:false,error:'validation-failed'},{status:400});
+  if(kind==='product' && (body.source.subtitle!=='' || body.source.abilities.length))return json({ok:false,error:'validation-failed'},{status:400});
   if (typeof env.GOOGLE_TRANSLATE_API_KEY !== 'string' || !env.GOOGLE_TRANSLATE_API_KEY.trim()) return json({ok:false,error:'translation-unavailable'},{status:503});
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),45000);

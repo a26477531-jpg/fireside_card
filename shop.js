@@ -29,7 +29,7 @@
     if (!grid || !window.CARDS) return;
     grid.innerHTML = BUNDLES.map(bundle => {
       const cards = bundleCards(bundle);
-      const title = bundle.name || cards.map(c => c.name).join(' × ');
+      const title = I18n.product(bundle).name || cards.map(c => c.name).join(' × ');
       const thumbs = cards.map(card => window.artwork(card)).join('');
       return `<article class="shop-card">
         <button class="shop-card-open" type="button" data-bundle="${escapeHTML(bundle.id)}" aria-label="${escapeHTML(t('view'))} ${escapeHTML(title)}">
@@ -72,7 +72,7 @@
     if (!cards.length) return;
     openBundleId = bundleId;
     if (opener) shopDetailOpener = opener;
-    const title = bundle.name || cards.map(c => c.name).join(' × ');
+    const title = I18n.product(bundle).name || cards.map(c => c.name).join(' × ');
     $('shop-detail-content').innerHTML = `
       <div class="shop-detail-header">
         <p class="collection">${escapeHTML(t('shopBundle'))}</p>

@@ -18,8 +18,15 @@ export function catalogHandlers(kind) {
       if(create && target) return json({ok:false,error:'duplicate-id'},{status:409});
       if(!create && !target) return json({ok:false,error:'not-found'},{status:404});
       if(!create && body.version !== target.version) return json({ok:false,error:'version-conflict'},{status:409});
-      if(kind === 'card') {
-        const previous=target?decode(target):null;
+      // Preserve translation metadata on partial legacy product updates. New products
+      // and renamed legacy products enter the same review workflow as cards.
+      const previous=target?decode(target):null;
+      if(kind==='product' && previous?.sourceLanguage) {
+        for(const key of ['sourceLanguage','translations','translationMeta'])if(body[key]===undefined)body[key]=previous[key];
+      }
+      if(kind==='product'){delete body.subtitle;delete body.abilities;}
+      const translatedEntity=kind==='card' || !previous || Boolean(body.sourceLanguage) || body.name!==previous.name || Object.keys(body.translations||{}).length>0;
+      if(translatedEntity) {
         if(previous?.sourceLanguage && body.sourceLanguage!==previous.sourceLanguage) return json({ok:false,error:'validation-failed'},{status:400});
         body.sourceLanguage ||= previous?.sourceLanguage || 'zh-TW';
         body.translationMeta ||= {};
@@ -35,10 +42,10 @@ export function catalogHandlers(kind) {
         }
       }
       // Persist only catalog fields, never request-provided actor/session metadata.
-      if(kind === 'card' && body.status === 'active' && body.sourceLanguage && languages.some(l=>l!==body.sourceLanguage && translationState(body,l)!=='reviewed')) return json({ok:false,error:'translation-review-required'},{status:400});
-      const keys = kind === 'card' ? ['name','subtitle','image','collection','mana','attack','health','abilities','translations','sourceLanguage','translationMeta','nameLayout','rulesLayout'] : ['name','cardIds','coinPrice'];
+      if(translatedEntity && body.status === 'active' && languages.some(l=>l!==body.sourceLanguage && translationState(body,l)!=='reviewed')) return json({ok:false,error:'translation-review-required'},{status:400});
+      const keys = kind === 'card' ? ['name','subtitle','image','collection','mana','attack','health','abilities','translations','sourceLanguage','translationMeta','nameLayout','rulesLayout'] : ['name','cardIds','coinPrice','translations','sourceLanguage','translationMeta'];
       const clean = Object.fromEntries(keys.filter(k=>body[k] !== undefined).map(k=>[k,body[k]]));
-      if(kind === 'card') {clean.translations ||= {};clean.translations[clean.sourceLanguage||'zh-TW']={name:clean.name,subtitle:clean.subtitle,abilities:clean.abilities};}
+      if(translatedEntity) {clean.translations ||= {};clean.translations[clean.sourceLanguage||'zh-TW']={name:clean.name,subtitle:clean.subtitle||'',abilities:clean.abilities||[]};}
       const encoded=JSON.stringify(clean);
       const write=create ? env.DB.prepare(`INSERT INTO ${table}(id,data,status) VALUES (?,?,?)`).bind(body.id,encoded,body.status) : env.DB.prepare(`UPDATE ${table} SET data=?, status=?, version=version+1, updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id=? AND version=?`).bind(encoded,body.status,body.id,body.version);
       const audit=env.DB.prepare("INSERT INTO admin_audit(actor_id,entity,entity_id,action,before_data,after_data) SELECT ?,?,?,?,?,? WHERE changes() > 0").bind(data.user.id,kind,body.id,create?'create':'update',target?JSON.stringify(decode(target)):null,JSON.stringify({...clean,status:body.status}));

@@ -21,6 +21,10 @@ export function validateCard(v) {
   return true;
 }
 export function validateProduct(v) {
+  if (!v) return false;
+  if (v.sourceLanguage !== undefined && !locales.includes(v.sourceLanguage)) return false;
+  if (v.translationMeta !== undefined && (!v.translationMeta || Array.isArray(v.translationMeta) || typeof v.translationMeta !== 'object' || !Object.entries(v.translationMeta).every(([lang,m])=>locales.includes(lang) && m && ['machine','edited','reviewed'].includes(m.status) && string(m.source,50000) && locales.includes(m.sourceLanguage)))) return false;
+  if (v.translations !== undefined && (!v.translations || Array.isArray(v.translations) || typeof v.translations !== 'object' || !Object.entries(v.translations).every(([lang,t])=>locales.includes(lang) && translation(t) && t.subtitle==='' && t.abilities.length===0))) return false;
   return v && string(v.name,100) && Array.isArray(v.cardIds) && v.cardIds.length > 0 && v.cardIds.length <= 20 && v.cardIds.every(validId) && new Set(v.cardIds).size === v.cardIds.length &&
     int(v.coinPrice,100000000);
 }
