@@ -5,3 +5,7 @@ td button { white-space: nowrap; }
 td small { overflow-wrap: anywhere; }
 .order-reference { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
 .order-reference summary { font-weight: 400; }
+#card-fields > label { margin-top: 16px; }
+#card-fields > label:has(input[type=checkbox]) { flex-direction: row; align-items: center; }
+#translation-status { background: #edf2ea; padding: 12px; border-radius: 6px; overflow-wrap: anywhere; }
+#translation-panel > button { margin: 6px 4px 6px 0; }

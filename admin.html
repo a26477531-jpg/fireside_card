@@ -4,7 +4,7 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>管理後台｜爐邊卡牌</title>
   <link rel="stylesheet" href="admin.css?v=1">
-  <script src="admin.js?v=1" defer></script>
+  <script src="admin.js?v=google-translation-1" type="module"></script>
 </head>
 <body>
   <header class="topbar"><a href="index.html">✦ 爐邊卡牌</a><span>管理後台</span><a href="shop.html">前往商城 ↗</a></header>
@@ -32,9 +32,12 @@
     <p class="muted">標示 * 的欄位為必填。ID 建立後不可修改；下架會保留資料及歷史紀錄。</p>
     <div class="form-grid"><label>ID *<input name="id" required pattern="[a-zA-Z0-9_-]{1,64}" maxlength="64"></label><label>狀態<select name="status"><option value="draft">草稿</option><option value="active">上架</option><option value="archived">下架</option></select></label><label class="wide">名稱 *<input name="name" required maxlength="100"></label></div>
     <div id="card-fields">
+      <label>原文語言（名稱與技能）<select id="source-language"><option value="zh-TW">繁體中文</option><option value="en">English</option><option value="ja">日本語</option><option value="ko">한국어</option></select></label>
+      <label><input id="auto-translate" type="checkbox" checked> 儲存時自動補齊缺少的翻譯</label>
+      <p>自動翻譯先存為草稿；逐一確認譯文後即可上架。既有翻譯不會自動覆蓋。</p>
       <div class="form-grid"><label>副標題<input name="subtitle" maxlength="200"></label><label>系列 *<input name="collection" maxlength="80" list="collection-options"><datalist id="collection-options"></datalist></label><label class="wide">圖片網址或專案圖片路徑 *<input name="image" maxlength="1000" placeholder="cards-clean-layout-31/example.webp 或 https://…"></label><label>法力 *<input name="mana" type="number" min="0" max="999" step="1"></label><label>攻擊 *<input name="attack" type="number" min="0" max="999" step="1"></label><label>生命 *<input name="health" type="number" min="0" max="999" step="1"></label></div>
       <h3>技能與規則</h3><div id="abilities"></div><button type="button" id="add-ability">＋ 新增技能</button>
-      <details><summary>外語翻譯（選填）</summary><p>選擇語言編輯名稱與技能。名稱留空會移除該語言翻譯，前台改用繁體中文。</p><label>編輯語言<select id="translation-language"><option value="en">English</option><option value="ja">日本語</option><option value="ko">한국어</option></select></label><div class="form-grid"><label>翻譯名稱<input name="translatedName" maxlength="100"></label><label>翻譯副標題<input name="translatedSubtitle" maxlength="200"></label></div><div id="translated-abilities"></div><button type="button" id="add-translated-ability">＋ 新增翻譯技能</button></details>
+      <details id="translation-panel"><summary>翻譯與人工確認</summary><p>名稱留空可移除翻譯。原文更新後會標記待確認；重新翻譯只替換目前選擇的語言。</p><button type="button" id="translate-missing">自動補齊翻譯</button><button type="button" id="translate-current">重新翻譯目前語言</button><p id="translation-status" role="status" aria-live="polite"></p><label>編輯語言<select id="translation-language"><option value="zh-TW">繁體中文</option><option value="en">English</option><option value="ja">日本語</option><option value="ko">한국어</option></select></label><div class="form-grid"><label>翻譯名稱<input name="translatedName" maxlength="100"></label><label>翻譯副標題<input name="translatedSubtitle" maxlength="200"></label></div><div id="translated-abilities"></div><button type="button" id="add-translated-ability">＋ 新增翻譯技能</button><button type="button" id="review-translation">確認此語言翻譯</button></details>
     </div>
     <div id="product-fields" hidden><label>金幣售價 *<input name="coinPrice" type="number" min="0" max="100000000" step="1"></label><fieldset><legend>包含卡牌（至少選一張，最多 20 張）</legend><div id="product-cards" class="card-options"></div></fieldset><p class="muted">上架商品只能包含已上架卡牌。卡牌下架後，包含該卡的商品也會從商城隱藏。</p></div>
     <p id="form-error" role="alert"></p><div class="editor-actions"><button type="button" id="cancel">取消</button><button class="primary" id="save">儲存</button></div>

@@ -26,7 +26,7 @@
   function card(base) {
     const versions = base.translations ?? window.CARD_TRANSLATIONS?.[base.id];
     const translated = versions?.[language] || versions?.['zh-TW'] || base;
-    return {...base,...translated,language:versions?.[language] ? language : 'zh-TW',
+    return {...base,...translated,language:versions?.[language] ? language : versions?.['zh-TW'] ? 'zh-TW' : (base.sourceLanguage || 'zh-TW'),
       rulesText:translated.abilities.map(a=>`${a.title}\n${a.text}`).join('\n\n')};
   }
   function setLanguage(value) {

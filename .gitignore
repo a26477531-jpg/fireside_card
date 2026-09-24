@@ -7,3 +7,9 @@ node_modules/
 # D1 資料庫備份檔，不要進版控
 *.sql
 !migrations/*.sql
+
+# Local provider credentials must not be committed.
+.dev.vars
+.dev.vars.*
+.env
+.env.*

@@ -6,8 +6,11 @@ const {database}=require('./helpers/d1.cjs');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
 (async()=>{
   const {DB,sqlite}=database();
-  const routes={};
-  for(const name of ['admin/cards','admin/products','admin/orders','catalog','me','favorites','purchases','my-cards'])routes['/api/'+name]=await import('../functions/api/'+name+'.js');
+  const routes={};let translationCalls=0,failTranslation=false;
+  const googleFetch=async(url,options)=>{translationCalls++;if(failTranslation)return new Response('{}',{status:503});const payload=JSON.parse(options.body);return Response.json({data:{translations:payload.q.map((text,i)=>({translatedText:i===0?payload.target+' translated':text}))}});};
+  for(const name of ['admin/translate','admin/cards','admin/products','admin/orders','catalog','me','favorites','purchases','my-cards'])routes['/api/'+name]=await import('../functions/api/'+name+'.js');
+  const translateRoute=routes['/api/admin/translate'];
+  routes['/api/admin/translate']={onRequestPost:[...translateRoute.onRequestPost.slice(0,-1),ctx=>translateRoute.translate(ctx,googleFetch)]};
   const root=path.resolve(__dirname,'..');
   const types={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.webp':'image/webp'};
   const server=http.createServer(async(req,res)=>{
@@ -19,7 +22,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
         const fn=routes[url.pathname]['onRequest'+({GET:'Get',POST:'Post',PUT:'Put',DELETE:'Delete'})[req.method]];
         if(!fn){res.writeHead(405).end();return;}
         const handlers=Array.isArray(fn)?fn:[fn];let i=0;
-        const context={request,env:{DB},data:{},next:()=>handlers[++i](context)};
+        const context={request,env:{DB,GOOGLE_TRANSLATE_API_KEY:'test-secret'},data:{},next:()=>handlers[++i](context)};
         const response=await handlers[0](context);res.writeHead(response.status,Object.fromEntries(response.headers));res.end(await response.text());return;
       }
       const file=path.resolve(root,'.'+(url.pathname==='/'?'/index.html':url.pathname));
@@ -38,9 +41,28 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     await page.locator('#create').click();
     const form=page.locator('#edit-form');
     for(const [key,value] of Object.entries({id:'browser-card',name:'瀏覽器測試卡',collection:'新系列',image:'cards-clean-layout-31/01-murloc-chief.webp'}))await form.locator(`[name="${key}"]`).fill(value);
-    await form.locator('[name="status"]').selectOption('active');await page.locator('#add-ability').click();await page.locator('[data-title]').fill('測試技能');await page.locator('[data-text]').fill('測試規則文字');await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
+    await page.locator('#add-ability').click();await page.locator('[data-title]').fill('測試技能');await page.locator('[data-text]').fill('測試規則文字');await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
     await page.locator('#search').fill('browser-card');assert.equal(await page.locator('#catalog-body tr').count(),1);
-    await page.locator('[data-edit="browser-card"]').click();await form.locator('[name="name"]').fill('修改後的卡牌');await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
+    assert.equal(translationCalls,3);
+    await page.locator('[data-edit="browser-card"]').click();
+    await page.locator('#translation-panel summary').click();
+    assert.match(await page.locator('#translation-status').textContent(),/自動翻譯/);
+    await form.locator('[name="translatedName"]').fill('Hand edited English');
+    await page.locator('#translate-missing').click();assert.equal(translationCalls,3);
+    const reviewAll=async()=>{for(const lang of ['en','ja','ko']){await page.locator('#translation-language').selectOption(lang);await page.locator('#review-translation').click();}};
+    await reviewAll();await form.locator('[name="status"]').selectOption('active');await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
+    await page.locator('[data-edit="browser-card"]').click();await form.locator('[name="name"]').fill('修改後的卡牌');await page.locator('#save').click();
+    assert.match(await page.locator('#form-error').textContent(),/草稿/);
+    assert.match(await page.locator('#translation-status').textContent(),/原文已更新/);
+    assert.equal(await form.locator('[name="translatedName"]').inputValue(),'Hand edited English');
+    await reviewAll();await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
+    await page.locator('[data-edit="browser-card"]').click();await page.locator('#translation-panel summary').click();
+    failTranslation=true;page.once('dialog',d=>d.accept());await page.locator('#translate-current').click();
+    await page.waitForFunction(()=>document.querySelector('#form-error').textContent.includes('翻譯失敗'));
+    assert.equal(await form.locator('[name="translatedName"]').inputValue(),'Hand edited English');failTranslation=false;
+    await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.querySelector('#editor').scrollWidth<=document.querySelector('#editor').clientWidth));
+    if(process.env.TRANSLATION_SCREENSHOT)await page.screenshot({path:process.env.TRANSLATION_SCREENSHOT});
+    await page.locator('#cancel').click();
     await page.locator('[data-tab="products"]').click();await page.locator('#search').fill('');await page.locator('#create').click();
     await form.locator('[name="id"]').fill('browser-product');await form.locator('[name="name"]').fill('測試金幣商品');await form.locator('[name="status"]').selectOption('active');await form.locator('[name="coinPrice"]').fill('88');await page.locator('#product-cards input[value="browser-card"]').check();await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
     await page.locator('[data-edit="browser-product"]').click();await form.locator('[name="coinPrice"]').fill('99');await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});

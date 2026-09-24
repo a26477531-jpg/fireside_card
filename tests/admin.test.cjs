@@ -37,7 +37,8 @@ test('catalog: permissions, create/edit, stale writes, atomic audit, publication
     assert.equal((await invoke(cards.onRequestPut,DB,{method:'PUT',body,origin:'https://evil.test'})).status,403);
     let pub=await (await catalog.onRequestGet({env:{DB}})).json();assert.ok(!pub.cards.some(c=>c.id===body.id));
     let saved=(await create.json()).item;
-    const active={...saved,status:'active'};
+    const {fingerprint}=await import('../translation-workflow.js');
+    const active={...saved,status:'active',translations:Object.fromEntries(['en','ja','ko'].map(l=>[l,{name:'Translated',subtitle:'',abilities:[]} ])),translationMeta:Object.fromEntries(['en','ja','ko'].map(l=>[l,{status:'reviewed',source:fingerprint(saved),sourceLanguage:'zh-TW'}]))};
     assert.equal((await invoke(cards.onRequestPut,DB,{method:'PUT',body:active})).status,200);
     assert.equal((await invoke(cards.onRequestPut,DB,{method:'PUT',body:active})).status,409);
     assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM admin_audit').get().n,2);

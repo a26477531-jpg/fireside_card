@@ -1,3 +1,4 @@
+import {languages, fingerprint, translationState} from './translation-workflow.js';
 'use strict';
 (() => {
   const $=id=>document.getElementById(id), esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -5,6 +6,8 @@
   const errors={'version-conflict':'資料已被其他管理員修改。請關閉視窗、重新載入後再編輯。','duplicate-id':'這個 ID 已存在，請換一個。','validation-failed':'資料格式不正確，請確認必填欄位、數值與翻譯格式。','invalid-product-card':'商品包含不存在或未上架的卡牌，請檢查選擇。','unauthenticated':'登入已過期，請重新登入。','forbidden':'此帳號沒有管理權限。'};
   let tab='cards', cards=[],products=[],editing=null,saving=false,page=1,orderQuery='',orderGeneration=0,translations={},translationLanguage='en';
   const form=$('edit-form'), field=name=>form.elements.namedItem(name);
+  let translationMeta={},translating=false;
+  Object.assign(errors,{'translation-unavailable':'尚未設定 Google 翻譯服務。可取消自動翻譯後儲存草稿。','translation-failed':'翻譯失敗或數值驗證未通過，原有內容已保留，請重試。','translation-review-required':'請先確認所有語言翻譯，再上架。'});
   async function api(url,options={}) {
     const response=await fetch(url,{credentials:'same-origin',cache:'no-store',...options});
     let data; try {data=await response.json();} catch {throw new Error('無法讀取後台資料。請確認 API 已部署且資料庫已初始化。');}
@@ -41,12 +44,39 @@
   }
   function saveTranslation() {
     const name=field('translatedName').value.trim();
-    if(!name){delete translations[translationLanguage];return;}
+    if(!name){delete translations[translationLanguage];delete translationMeta[translationLanguage];return;}
+    const previous=translations[translationLanguage];
     translations[translationLanguage]={name,subtitle:field('translatedSubtitle').value.trim(),abilities:[...$('translated-abilities').children].map(r=>({title:r.querySelector('[data-title]').value.trim(),text:r.querySelector('[data-text]').value.trim()}))};
+    if(JSON.stringify(previous)!==JSON.stringify(translations[translationLanguage]))markTranslation('edited');
+  }
+  function sourceContent() {
+    return {name:field('name').value.trim(),subtitle:field('subtitle').value.trim(),abilities:[...$('abilities').children].map(r=>({title:r.querySelector('[data-title]').value.trim(),text:r.querySelector('[data-text]').value.trim()}))};
+  }
+  function markTranslation(status) {translationMeta[translationLanguage]={status,source:fingerprint(sourceContent()),sourceLanguage:$('source-language').value};}
+  function updateTranslationStatus() {
+    const names={missing:'尚無翻譯',machine:'自動翻譯・待人工確認',edited:'人工修改・待確認',reviewed:'已人工確認',stale:'原文已更新・翻譯待確認'};
+    const card={...sourceContent(),sourceLanguage:$('source-language').value,translations,translationMeta};
+    $('translation-status').textContent=languages.filter(l=>l!==card.sourceLanguage).map(l=>`${l}：${names[translationState(card,l)]}`).join(' ／ ');
+  }
+  async function generateTranslations(current=false) {
+    saveTranslation();
+    const source=sourceContent(),sourceLanguage=$('source-language').value;
+    if(!source.name || source.abilities.some(a=>!a.title||!a.text))throw new Error('請先填寫原文名稱及完整技能。');
+    const targets=current?[translationLanguage]:languages.filter(l=>l!==sourceLanguage&&!translations[l]);
+    if(!targets.length)return;
+    if(current && translations[translationLanguage] && !window.confirm('重新翻譯會取代此語言的現有內容（包含人工修改），確定繼續？'))return;
+    translating=true;
+    const controls=[...form.querySelectorAll('input,textarea,select,button')],disabled=controls.map(el=>el.disabled);
+    controls.forEach(el=>el.disabled=true);$('translation-status').textContent='正在翻譯，請稍候…';
+    try {
+      const result=await api('/api/admin/translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source,sourceLanguage,targets}),signal:AbortSignal.timeout(60000)});
+      for(const lang of targets){translations[lang]=result.translations[lang];translationMeta[lang]={status:'machine',source:fingerprint(source),sourceLanguage};}
+      showTranslation();
+    }finally{controls.forEach((el,i)=>el.disabled=disabled[i]);translating=false;updateTranslationStatus();}
   }
   function showTranslation() {
     const value=translations[translationLanguage];field('translatedName').value=value?.name||'';field('translatedSubtitle').value=value?.subtitle||'';
-    $('translated-abilities').replaceChildren();for(const a of value?.abilities||[])addAbility(a,$('translated-abilities'));
+    $('translated-abilities').replaceChildren();for(const a of value?.abilities||[])addAbility(a,$('translated-abilities'));updateTranslationStatus();
   }
   function edit(id) {
     const isCard=tab==='cards';editing=id?(isCard?cards:products).find(r=>r.id===id):null;
@@ -63,7 +93,12 @@
     field('coinPrice').required=!isCard;
     if(isCard){
       for(const a of editing?.abilities||[])addAbility(a);
-      translations=structuredClone(editing?.translations||{});delete translations['zh-TW'];translationLanguage='en';$('translation-language').value='en';showTranslation();
+      translations=structuredClone(editing?.translations||{});translationMeta=structuredClone(editing?.translationMeta||{});
+      $('source-language').value=editing?.sourceLanguage||'zh-TW';$('source-language').disabled=Boolean(editing);
+      const sourceLanguage=$('source-language').value;delete translations[sourceLanguage];
+      for(const lang of Object.keys(translations))if(!translationMeta[lang])translationMeta[lang]={status:'reviewed',source:fingerprint(sourceContent()),sourceLanguage};
+      for(const option of $('translation-language').options)option.disabled=option.value===sourceLanguage;
+      translationLanguage=languages.find(l=>l!==sourceLanguage);$('translation-language').value=translationLanguage;$('auto-translate').checked=!editing;$('translation-panel').open=false;showTranslation();
       $('collection-options').innerHTML=[...new Set(cards.map(c=>c.collection))].map(v=>`<option value="${esc(v)}"></option>`).join('');
     } else {
       $('product-cards').innerHTML=cards.map(c=>`<label><input type="checkbox" value="${esc(c.id)}" ${editing?.cardIds.includes(c.id)?'checked':''}>${esc(c.name)} (${esc(statusNames[c.status])})</label>`).join('');
@@ -71,13 +106,16 @@
     $('editor').showModal();field(editing?'name':'id').focus();
   }
   form.addEventListener('submit',async event=>{
-    event.preventDefault();if(saving)return;
+    event.preventDefault();if(saving||translating)return;
     let body={id:field('id').value.trim(),name:field('name').value.trim(),status:field('status').value,version:editing?.version};
     if(tab==='cards') {
       for(const key of ['subtitle','image','collection'])body[key]=field(key).value.trim();
       for(const key of ['mana','attack','health'])body[key]=Number(field(key).value);
       body.abilities=[...$('abilities').children].map(r=>({title:r.querySelector('[data-title]').value.trim(),text:r.querySelector('[data-text]').value.trim()}));
-      saveTranslation();body.translations=translations;
+      saveTranslation();
+      if($('auto-translate').checked){try{await generateTranslations();}catch(e){$('form-error').textContent=e.message;return;}}
+      body.translations=translations;body.translationMeta=translationMeta;body.sourceLanguage=$('source-language').value;
+      if(body.status==='active' && languages.some(l=>l!==body.sourceLanguage && translationState(body,l)!=='reviewed')){$('form-error').textContent='請先將卡牌存為草稿，確認所有語言翻譯後再上架。';$('translation-panel').open=true;return;}
       for(const key of ['nameLayout','rulesLayout'])if(editing?.[key])body[key]=editing[key];
     } else {body.coinPrice=Number(field('coinPrice').value);body.cardIds=[...$('product-cards').querySelectorAll('input:checked')].map(i=>i.value);if(!body.cardIds.length){$('form-error').textContent='請至少選一張卡牌。';return;}}
     saving=true;$('save').disabled=true;$('save').textContent='儲存中…';$('form-error').textContent='';
@@ -97,9 +135,19 @@
   $('catalog-body').onclick=e=>{const b=e.target.closest('[data-edit]');if(b)edit(b.dataset.edit);};
   $('add-ability').onclick=()=>addAbility();
   $('add-translated-ability').onclick=()=>addAbility(undefined,$('translated-abilities'));
+  $('source-language').onchange=()=>{
+    saveTranslation();const sourceLanguage=$('source-language').value;delete translations[sourceLanguage];delete translationMeta[sourceLanguage];
+    for(const option of $('translation-language').options)option.disabled=option.value===sourceLanguage;
+    translationLanguage=languages.find(l=>l!==sourceLanguage);$('translation-language').value=translationLanguage;showTranslation();
+  };
+  for(const [id,current] of [['translate-missing',false],['translate-current',true]])$(id).onclick=async()=>{if(translating||saving)return;$('form-error').textContent='';try{await generateTranslations(current);}catch(e){$('form-error').textContent=e.message;}};
+  $('review-translation').onclick=()=>{saveTranslation();if(!translations[translationLanguage]){$('form-error').textContent='請先填寫翻譯。';return;}markTranslation('reviewed');updateTranslationStatus();};
+  form.addEventListener('input',()=>{if(tab==='cards'){saveTranslation();updateTranslationStatus();}});
+  $('abilities').addEventListener('click',()=>updateTranslationStatus());
+  $('translated-abilities').addEventListener('click',()=>{saveTranslation();updateTranslationStatus();});
   $('translation-language').onchange=()=>{saveTranslation();translationLanguage=$('translation-language').value;showTranslation();};
-  for(const id of ['close','cancel'])$(id).onclick=()=>{if(!saving)$('editor').close();};
-  $('editor').addEventListener('cancel',e=>{if(saving)e.preventDefault();});
+  for(const id of ['close','cancel'])$(id).onclick=()=>{if(!saving&&!translating)$('editor').close();};
+  $('editor').addEventListener('cancel',e=>{if(saving||translating)e.preventDefault();});
   $('order-search').onsubmit=e=>{e.preventDefault();page=1;orderQuery=new URLSearchParams(new FormData(e.target)).toString();orders();};
   $('prev').onclick=()=>{page--;orders();};$('next').onclick=()=>{page++;orders();};
   (async()=>{try{const {user}=await api('/api/me');if(!user){$('access').innerHTML='請先以管理員帳號<a href="login.html">登入</a>。';return;}if(user.role!=='admin'){$('access').textContent='此帳號沒有管理權限。';return;}$('admin-name').textContent=user.username;$('access').hidden=true;$('workspace').hidden=false;await reload();}catch(e){$('access').textContent=e.message;}})();

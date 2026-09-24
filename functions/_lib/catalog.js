@@ -4,13 +4,15 @@ const string = (v,max,optional=false) => typeof v === 'string' && v.length <= ma
 const int = (v,max) => Number.isSafeInteger(v) && v >= 0 && v <= max;
 export const validId = id => typeof id === 'string' && /^[a-zA-Z0-9_-]{1,64}$/.test(id);
 function abilities(v) { return Array.isArray(v) && v.length <= 12 && v.every(a=>a && string(a.title,120) && string(a.text,3000)); }
-function translation(v) { return v && string(v.name,100) && string(v.subtitle,200,true) && abilities(v.abilities); }
+export function translation(v) { return v && string(v.name,100) && string(v.subtitle,200,true) && abilities(v.abilities); }
 function image(v) {
   if (!string(v,1000)) return false;
   if (/^[\w/-]+\.(webp|png|jpe?g)$/i.test(v) && !v.startsWith('/') && !v.includes('..')) return true;
   try { const u = new URL(v); return u.protocol === 'https:' && !u.username && !u.password; } catch { return false; }
 }
 export function validateCard(v) {
+  if (v.sourceLanguage !== undefined && !locales.includes(v.sourceLanguage)) return false;
+  if (v.translationMeta !== undefined && (!v.translationMeta || Array.isArray(v.translationMeta) || typeof v.translationMeta !== 'object' || !Object.entries(v.translationMeta).every(([lang,m])=>locales.includes(lang) && m && ['machine','edited','reviewed'].includes(m.status) && string(m.source,50000) && locales.includes(m.sourceLanguage)))) return false;
   if (!v || !translation(v) || !image(v.image) || !string(v.collection,80) || !['mana','attack','health'].every(k=>int(v[k],999))) return false;
   if (v.translations !== undefined && (!v.translations || Array.isArray(v.translations) || typeof v.translations !== 'object' || !Object.entries(v.translations).every(([k,t])=>locales.includes(k) && translation(t)))) return false;
   for (const key of ['nameLayout','rulesLayout']) {
