@@ -53,7 +53,7 @@
 
 管理後台與資料庫部署步驟請先閱讀 [管理後台說明](管理後台說明.md)。新版本卡牌庫及商城改為透過 `/api/catalog` 讀取 D1；`node serve.cjs` 的靜態預覽不能代替 Functions 環境。
 
-登入後在卡牌詳情按「加入收藏／取消收藏」，卡牌庫勾選「只看收藏」可與搜尋及其他篩選一起使用。收藏依登入帳號儲存在 D1 的 favorites 表（已有 migrations/0001_init.sql），不是購買或持有卡牌。
+登入後在卡牌詳情按「加入收藏／取消收藏」，點選導覽列「我的收藏」會開啟獨立的 favorites.html 頁面，可搜尋、篩選、排序及取消收藏；卡牌庫不再提供「只看收藏」勾選框。舊的 index.html?favorites=1 連結會轉到收藏頁。收藏依登入帳號儲存在 D1 的 favorites 表（已有 migrations/0001_init.sql），不是購買或持有卡牌。
 
 API：GET /api/favorites 列出自己的卡牌 ID；PUT /api/favorites 加入、DELETE /api/favorites 取消，寫入 body 為 {"cardId":"01"}。帳號 ID 一律由 Session 取得；重複加入不會建立重複資料。新增收藏會確認卡牌已在 catalog_cards 上架。
 

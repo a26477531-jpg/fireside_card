@@ -9,8 +9,9 @@
   const t=key=>(labels[window.CardI18n?.language]||labels['zh-TW'])[key];
   function nav(){
     const parent=document.querySelector('.navbar nav');if(!parent)return;
-    for(const [id,key,href] of [['nav-my-cards','myCards','my-cards.html'],['nav-wishlist','wishlist','index.html?favorites=1#library']]){
+    for(const [id,key,href] of [['nav-my-cards','myCards','my-cards.html'],['nav-wishlist','wishlist','favorites.html']]){
       let link=document.getElementById(id);if(!link){link=document.createElement('a');link.id=id;link.href=href;parent.append(link);}link.textContent=t(key);
+      if(location.pathname.endsWith('/'+href)){link.classList.add('active');link.setAttribute('aria-current','page');}
     }
   }
   const pending=new Map();let busy=false;

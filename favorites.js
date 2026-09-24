@@ -7,22 +7,48 @@
     ko:['즐겨찾기 추가','즐겨찾기 해제','즐겨찾기만','로그인해 주세요','불러오기 실패. 다시 시도하세요','저장 실패. 다시 시도하세요','처리 중…','로그인','다시 불러오기']
   };
   const text = i => (labels[CardI18n.language] || labels['zh-TW'])[i];
+  const pageLabels = {
+    'zh-TW': ['我的收藏','載入收藏中…','請登入以查看你的收藏。','尚無收藏卡牌','前往卡牌庫，開啟卡牌詳情並加入收藏。','瀏覽卡牌庫','收藏卡牌目前無法顯示','收藏紀錄仍保留，卡牌可能已下架。'],
+    en: ['Wishlist','Loading favorites…','Sign in to view your favorites.','No favorites yet','Open card details in the library to add favorites.','Browse card library','Favorites currently unavailable','Your favorites are saved, but the cards may have been archived.'],
+    ja: ['お気に入り','読み込み中…','お気に入りを見るにはログインしてください。','お気に入りはまだありません','カードライブラリで詳細を開いて追加してください。','カードライブラリへ','表示できるお気に入りがありません','登録は保持されていますが、カードの公開が終了した可能性があります。'],
+    ko: ['즐겨찾기','불러오는 중…','즐겨찾기를 보려면 로그인해 주세요.','즐겨찾기가 없습니다','카드 라이브러리에서 상세 정보를 열어 추가하세요.','카드 라이브러리 보기','표시할 수 있는 즐겨찾기가 없습니다','즐겨찾기는 저장되어 있지만 카드가 비공개로 전환되었을 수 있습니다.']
+  };
+  const pageText = i => (pageLabels[CardI18n.language] || pageLabels['zh-TW'])[i];
   let ids = new Set(), user = null, ready = false, busy = false, current = null, generation = 0;
+  let accountReady = false, loading = false;
   const bar = document.createElement('div');
   bar.className = 'favorites-toolbar';
-  bar.innerHTML = '<label><input type="checkbox" id="favorites-only"> <span></span></label> <button type="button" class="gold-button"></button><p role="status"></p>';
+  bar.innerHTML = '<button type="button" class="gold-button"></button><p role="status"></p><a href="login.html" hidden></a>';
+  bar.hidden = !isFavoritesPage;
   document.querySelector('.results-toolbar').before(bar);
-  const checkbox = bar.querySelector('input'), retry = bar.querySelector('button'), status = bar.querySelector('p');
+  const retry = bar.querySelector('button'), status = bar.querySelector('p'), login = bar.querySelector('a');
+  const browse = document.createElement('a');
+  browse.href = 'index.html#library'; browse.className = 'gold-button'; browse.hidden = true;
+  document.getElementById('empty').append(browse);
+  function renderPage(count) {
+    document.title = `${pageText(0)} | ${CardI18n.t('brand')}`;
+    const available = ready && user && window.FiresideCatalog?.state === 'ready';
+    document.getElementById('empty').hidden = !available || count !== 0;
+    document.querySelector('.view-controls').hidden = !available;
+    document.getElementById('results-count').hidden = !available;
+    const emptyCollection = available && !window.CARDS.some(card => ids.has(card.id));
+    document.querySelector('#empty h3').textContent = emptyCollection ? pageText(ids.size ? 6 : 3) : CardI18n.t('empty');
+    document.querySelector('#empty p').textContent = emptyCollection ? pageText(ids.size ? 7 : 4) : CardI18n.t('emptyHelp');
+    document.getElementById('empty-reset').hidden = Boolean(emptyCollection);
+    browse.hidden = !emptyCollection; browse.textContent = pageText(5);
+  }
   function sync() {
-    bar.querySelector('span').textContent = text(2);
     retry.textContent = text(8);
-    checkbox.disabled = !ready || !user;
-    retry.hidden = !user || ready;
+    retry.hidden = !user || ready || loading;
+    login.hidden = !accountReady || Boolean(user); login.textContent = text(7);
+    if (!accountReady || loading) status.textContent = pageText(1);
+    else if (!user) status.textContent = pageText(2);
+    else if (!ready) status.textContent = text(4);
     if (current) mount(current);
   }
   async function load() {
     const version = ++generation;
-    ready = false; ids = new Set(); checkbox.checked = false; status.textContent = ''; sync(); render();
+    ready = false; loading = Boolean(user); ids = new Set(); status.textContent = ''; sync(); render();
     if (!user) return;
     try {
       const response = await fetch('/api/favorites', {credentials:'same-origin',cache:'no-store'});
@@ -31,9 +57,9 @@
       if (!data.ok || !Array.isArray(data.cardIds)) throw new Error();
       if (version !== generation) return;
       ids = new Set(data.cardIds); ready = true;
-      if(new URLSearchParams(location.search).get('favorites')==='1')checkbox.checked=true;
+      status.textContent = '';
     } catch { if(version === generation) status.textContent = text(4); }
-    if(version === generation) { sync(); render(); }
+    if(version === generation) { loading = false; sync(); render(); }
   }
   function mount(id) {
     current = id;
@@ -48,7 +74,7 @@
     if (!user) {
       message.textContent = text(3)+' ';
       const link = document.createElement('a'); link.href = 'login.html'; link.textContent = text(7); message.append(link);
-    } else if (!ready) message.textContent = text(4);
+    } else if (!ready) message.textContent = loading ? pageText(1) : text(4);
     button.addEventListener('click', async () => {
       if (!user) { control.querySelector('a').focus(); return; }
       if (!ready || busy) return;
@@ -66,11 +92,10 @@
     });
     document.querySelector('#detail-content .detail-copy')?.prepend(control);
   }
-  window.CardFavorites = {has:id=>ids.has(id), get only(){return checkbox.checked;}, mount};
-  checkbox.addEventListener('change',()=>{state.page=1;render();});
+  window.CardFavorites = {has:id=>ids.has(id), get title(){return pageText(0);}, mount, renderPage};
   retry.addEventListener('click',load);
-  document.addEventListener('fireside-account-ready',event=>{user=event.detail.user;load();});
-  document.getElementById('language').addEventListener('change',sync);
+  document.addEventListener('fireside-account-ready',event=>{accountReady=true;user=event.detail.user;load();});
+  document.getElementById('language').addEventListener('change',()=>{sync();render();});
   document.getElementById('detail').addEventListener('close',()=>{current=null;});
-  sync();
+  sync(); render();
 })();
