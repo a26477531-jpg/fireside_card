@@ -9,9 +9,12 @@
   const t=key=>(labels[window.CardI18n?.language]||labels['zh-TW'])[key];
   function nav(){
     const parent=document.querySelector('.navbar nav');if(!parent)return;
+    const currentPage=location.pathname.replace(/\/+$/,'').split('/').pop().replace(/\.html$/,'');
     for(const [id,key,href] of [['nav-my-cards','myCards','my-cards.html'],['nav-wishlist','wishlist','favorites.html']]){
       let link=document.getElementById(id);if(!link){link=document.createElement('a');link.id=id;link.href=href;parent.append(link);}link.textContent=t(key);
-      if(location.pathname.endsWith('/'+href)){link.classList.add('active');link.setAttribute('aria-current','page');}
+      const isCurrentPage=currentPage===href.replace(/\.html$/,'');
+      link.classList.toggle('active',isCurrentPage);
+      if(isCurrentPage)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');
     }
   }
   const pending=new Map();let busy=false;
