@@ -40,6 +40,16 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     await page.goto(base+'/admin.html');await page.waitForFunction(()=>document.querySelectorAll('#catalog-body tr').length===31);
     await page.locator('#create').click();
     const form=page.locator('#edit-form');
+    await page.locator('#cancel').click();await page.locator('#editor').waitFor({state:'hidden'});
+    await page.locator('#create').click();
+    await form.locator('[name="name"]').fill('尚未儲存');
+    await page.locator('#close').click();assert.ok(await page.locator('#unsaved-warning').isVisible());
+    await page.locator('#keep-editing').click();assert.equal(await form.locator('[name="name"]').inputValue(),'尚未儲存');
+    await page.keyboard.press('Escape');assert.ok(await page.locator('#editor').isVisible());assert.ok(await page.locator('#unsaved-warning').isVisible());
+    assert.equal(await page.evaluate(()=>!window.dispatchEvent(new Event('beforeunload',{cancelable:true}))),true);
+    await page.locator('#discard-editing').click();await page.locator('#editor').waitFor({state:'hidden'});
+    assert.equal(await page.evaluate(()=>!window.dispatchEvent(new Event('beforeunload',{cancelable:true}))),false);
+    await page.locator('#create').click();
     for(const [key,value] of Object.entries({id:'browser-card',name:'瀏覽器測試卡',collection:'新系列',image:'cards-clean-layout-31/01-murloc-chief.webp'}))await form.locator(`[name="${key}"]`).fill(value);
     await form.locator('[name="id"]').fill('invalid id');await page.locator('#save').click();
     assert.match(await page.locator('#form-error').textContent(),/無法儲存.*ID/);
@@ -64,6 +74,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     await page.locator('#translate-missing').click();
     await page.waitForFunction(()=>document.querySelector('#translation-status').textContent.includes('自動翻譯'));
     assert.match(await page.locator('#translation-status').textContent(),/自動翻譯/);
+    await page.locator('#cancel').click();assert.ok(await page.locator('#unsaved-warning').isVisible());await page.locator('#keep-editing').click();
     await form.locator('[name="translatedName"]').fill('Hand edited English');
     await page.locator('#translate-missing').click();assert.equal(translationCalls,6);
     const reviewAll=async()=>{for(const lang of ['en','ja','ko']){await page.locator('#translation-language').selectOption(lang);await page.locator('#review-translation').click();}};
@@ -82,7 +93,12 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     await page.locator('#cancel').click();
     await page.locator('[data-tab="products"]').click();await page.locator('#search').fill('');await page.locator('#create').click();
     await form.locator('[name="id"]').fill('browser-product');await form.locator('[name="name"]').fill('測試金幣商品');await form.locator('[name="status"]').selectOption('active');await form.locator('[name="coinPrice"]').fill('88');await page.locator('#product-cards input[value="browser-card"]').check();await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
-    await page.locator('[data-edit="browser-product"]').click();await form.locator('[name="coinPrice"]').fill('99');await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
+    await page.locator('[data-edit="browser-product"]').click();
+    await page.locator('#product-cards input[value="browser-card"]').uncheck();await page.locator('#cancel').click();assert.ok(await page.locator('#unsaved-warning').isVisible());await page.locator('#keep-editing').click();
+    await page.locator('#product-cards input[value="browser-card"]').check();await page.locator('#cancel').click();await page.locator('#editor').waitFor({state:'hidden'});
+    await page.locator('[data-edit="browser-product"]').click();await form.locator('[name="coinPrice"]').fill('99');
+    await page.locator('#close').click();assert.ok(await page.locator('#unsaved-warning').isVisible());await page.locator('#keep-editing').click();
+    await page.locator('#save').click();await page.locator('#editor').waitFor({state:'hidden'});
     await page.locator('[data-tab="orders"]').click();await page.locator('#orders-empty').waitFor();assert.match(await page.locator('#order-summary').textContent(),/0/);
     sqlite.exec("INSERT INTO purchase_orders(id,user_id,player_username,player_email,product_id,product_name,currency,unit_price,quantity,total,status,created_at) VALUES ('browser-order',2,'member','member@example.test','browser-product','交易當時名稱','COIN',88,1,88,'completed','2026-09-21T10:00:00.000Z');");
     await page.locator('#order-search [name="player"]').fill('member');await page.locator('#order-search button').click();await page.waitForFunction(()=>document.querySelectorAll('#orders-body tr').length===1);assert.match(await page.locator('#orders-body').textContent(),/88 金幣/);
