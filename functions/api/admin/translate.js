@@ -7,6 +7,18 @@ import { content } from '../../../translation-workflow.js';
 const numbers = text => (text.match(/\d+(?:[.,]\d+)?/g)||[]).sort().join('|');
 const tokens = text => (text.match(/\{[^{}]+\}|\[\[[^\]]+\]\]|%[sd]|[+%×÷=<>]/g)||[]).sort().join('|');
 const preserved = (a,b) => numbers(a)===numbers(b) && tokens(a)===tokens(b);
+function failure(code){const error=new Error(code);error.code=code;return error;}
+function providerFailure(status,payload){
+  // Inspect provider text only for classification. Never expose it or credentials.
+  const info=JSON.stringify(payload||{});
+  if(/API_KEY_INVALID|API key not valid/i.test(info))return 'translation-key-invalid';
+  if(/BILLING_DISABLED|billing.*(disabled|enabled)|billingNotActive/i.test(info))return 'translation-billing';
+  if(/SERVICE_DISABLED|accessNotConfigured|has not been used|is disabled/i.test(info))return 'translation-api-disabled';
+  if(/API_KEY_.*BLOCKED|referer|referrer|ipRefererBlocked/i.test(info))return 'translation-key-restricted';
+  if(status===429||/QUOTA_EXCEEDED|RATE_LIMIT_EXCEEDED|dailyLimitExceeded|userRateLimitExceeded/i.test(info))return 'translation-quota';
+  if(status===401||status===403)return 'translation-access-denied';
+  return 'translation-provider-error';
+}
 export async function translate({request,env}, fetchTranslation=fetch) {
   if (request.headers.get('Origin') && request.headers.get('Origin') !== new URL(request.url).origin) return json({ok:false,error:'forbidden'},{status:403});
   let body;
@@ -35,7 +47,7 @@ export async function translate({request,env}, fetchTranslation=fetch) {
         body:JSON.stringify({q:batch.map(i=>fields[i]),source:body.sourceLanguage,target:lang,format:'text',model:'nmt'}),
         signal:controller.signal
       });
-      if(!response.ok)throw Error('provider-error');
+      if(!response.ok){let payload;try{payload=await response.json();}catch{}throw failure(providerFailure(response.status,payload));}
       const rows=(await response.json())?.data?.translations;
       if(!Array.isArray(rows)||rows.length!==batch.length||rows.some(r=>typeof r?.translatedText!=='string'))throw Error('invalid-response');
       rows.forEach((row,i)=>{translated[batch[i]]=row.translatedText;});
@@ -46,7 +58,12 @@ export async function translate({request,env}, fetchTranslation=fetch) {
     }));
     const translations=Object.fromEntries(entries);
     return json({ok:true,translations});
-  }catch{controller.abort();return json({ok:false,error:'translation-failed'},{status:502});}
+  }catch(error){
+    const code=error.code || (controller.signal.aborted?'translation-timeout':error instanceof TypeError?'translation-network':'translation-failed');
+    controller.abort();
+    // A failed dependency is a handled API response, not an edge gateway failure.
+    return json({ok:false,error:code},{status:424});
+  }
   finally{clearTimeout(timer);}
 }
-export const onRequestPost=[authenticate,requirePermission('card.edit'),translate];
+export const onRequestPost=[authenticate,requirePermission('card.edit'),context=>translate(context)];

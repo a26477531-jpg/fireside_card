@@ -8,6 +8,17 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
   const form=$('edit-form'), field=name=>form.elements.namedItem(name);
   let translationMeta={},translating=false;
   Object.assign(errors,{'translation-unavailable':'尚未設定 Google 翻譯服務。可取消自動翻譯後儲存草稿。','translation-failed':'翻譯失敗或數值驗證未通過，原有內容已保留，請重試。','translation-review-required':'請先確認所有語言翻譯，再上架。'});
+  Object.assign(errors,{
+    'translation-key-invalid':'Google 不接受目前的 API 金鑰，請確認金鑰有效且貼上完整。',
+    'translation-api-disabled':'此金鑰所屬的 Google 專案尚未啟用 Cloud Translation API。',
+    'translation-billing':'Google 要求先為金鑰所屬專案啟用帳單（可使用有效試用帳戶）。',
+    'translation-key-restricted':'Google 金鑰限制阻擋了翻譯請求，請確認允許 Cloud Translation API，且未設定瀏覽器來源限制。',
+    'translation-quota':'Google 翻譯配額已達上限，請檢查 Google Cloud 配額後再試。',
+    'translation-access-denied':'Google 拒絕存取，請檢查金鑰權限、Translation API 啟用與帳單狀態。',
+    'translation-provider-error':'翻譯失敗：Google 服務回傳錯誤，請稍後再試。',
+    'translation-network':'翻譯伺服器無法連線到 Google，請稍後再試。',
+    'translation-timeout':'Google 翻譯逾時，原文已保留，請稍後再試。'
+  });
   async function api(url,options={}) {
     const response=await fetch(url,{credentials:'same-origin',cache:'no-store',...options});
     let data; try {data=await response.json();} catch {
@@ -124,7 +135,7 @@ import {languages, fingerprint, translationState} from './translation-workflow.j
       body.abilities=[...$('abilities').children].map(r=>({title:r.querySelector('[data-title]').value.trim(),text:r.querySelector('[data-text]').value.trim()}));
       saveTranslation();
       if($('auto-translate').checked){try{await generateTranslations();}catch(e){
-        const canSaveDraft=body.status==='draft' && (['translation-unavailable','translation-failed'].includes(e.code)||['TypeError','TimeoutError','AbortError'].includes(e.name));
+        const canSaveDraft=body.status==='draft' && (e.code?.startsWith('translation-')||['TypeError','TimeoutError','AbortError'].includes(e.name));
         if(!canSaveDraft){$('form-error').textContent=e.message;return;}
         translationWarning='已儲存草稿；自動翻譯未完成，原文與既有譯文已保留。請稍後編輯此卡牌，按「自動補齊翻譯」。';
       }}

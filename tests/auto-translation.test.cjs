@@ -20,18 +20,22 @@ test('translation endpoint: auth, validation, missing key, Google request mappin
       assert.ok(payload.q.join('').length<=5000);
       return respond(payload);
     });
+    for(const [reason,code] of [['API_KEY_INVALID','translation-key-invalid'],['SERVICE_DISABLED','translation-api-disabled'],['BILLING_DISABLED','translation-billing'],['API_KEY_HTTP_REFERRER_BLOCKED','translation-key-restricted'],['QUOTA_EXCEEDED','translation-quota']]){
+      const response=await call(()=>Response.json({error:{message:'private test-secret',details:[{reason}]}},{status:403}));
+      assert.equal(response.status,424);assert.deepEqual(await response.json(),{ok:false,error:code});
+    }
     const success=p=>Response.json({data:{translations:p.q.map(t=>({translatedText:t}))}});
     assert.deepEqual((await (await call(success)).json()).translations,Object.fromEntries(body.targets.map(l=>[l,source])));
     for(const status of [400,403,429,500]){
-      const response=await call(()=>new Response('secret provider detail',{status}));assert.equal(response.status,502);assert.ok(!(await response.text()).includes('secret'));
+      const response=await call(()=>new Response('secret provider detail',{status}));assert.equal(response.status,424);assert.ok(!(await response.text()).includes('secret'));
     }
-    assert.equal((await call(()=>new Response('not json'))).status,502);
-    assert.equal((await call(p=>Response.json({data:{translations:p.q.map(t=>({translatedText:t.replace('2','99')}))}}))).status,502);
-    assert.equal((await call(()=>Response.json({data:{translations:[]}}))).status,502);
-    assert.equal((await call(()=>{throw new Error('network failed');})).status,502);
+    assert.equal((await call(()=>new Response('not json'))).status,424);
+    assert.equal((await call(p=>Response.json({data:{translations:p.q.map(t=>({translatedText:t.replace('2','99')}))}}))).status,424);
+    assert.equal((await call(()=>Response.json({data:{translations:[]}}))).status,424);
+    assert.equal((await call(()=>{throw new Error('network failed');})).status,424);
     const withSymbols={...body,source:{name:'A & B',subtitle:'A < B',abilities:[{title:'Shield',text:'Gain +2% {shield}.'}]}};
     assert.deepEqual((await (await call(success,withSymbols)).json()).translations.ja,withSymbols.source);
-    assert.equal((await call(p=>Response.json({data:{translations:p.q.map(t=>({translatedText:t.replace('{shield}','shield')}))}}),withSymbols)).status,502);
+    assert.equal((await call(p=>Response.json({data:{translations:p.q.map(t=>({translatedText:t.replace('{shield}','shield')}))}}),withSymbols)).status,424);
     for(const sourceLanguage of ['zh-TW','ja','ko'])assert.equal((await call(success,{...body,sourceLanguage,targets:['en']})).status,200);
     const longSource={...source,subtitle:'Subtitle',abilities:Array.from({length:12},(_,i)=>({title:'Ability '+i,text:'Long description '.repeat(170)}))};
     assert.deepEqual((await (await call(success,{...body,source:longSource})).json()).translations.ko,longSource);
