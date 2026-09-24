@@ -39,6 +39,26 @@ test('translation endpoint: auth, validation, missing key, Google request mappin
     for(const sourceLanguage of ['zh-TW','ja','ko'])assert.equal((await call(success,{...body,sourceLanguage,targets:['en']})).status,200);
     const longSource={...source,subtitle:'Subtitle',abilities:Array.from({length:12},(_,i)=>({title:'Ability '+i,text:'Long description '.repeat(170)}))};
     assert.deepEqual((await (await call(success,{...body,source:longSource})).json()).translations.ko,longSource);
+    for(const [original,translated,expected] of [
+      ['造成三點傷害。','Deal 3 damage.',200],
+      ['造成三點傷害。','Deal three damage.',200],
+      ['抽一張牌。','Draw a card.',200],
+      ['恢復兩點生命。','Restore 2 health.',200],
+      ['造成十二點傷害。','Deal twelve damage.',200],
+      ['造成二十一點傷害。','Deal twenty-one damage.',200],
+      ['獲得＋３攻擊力。','Gain +3 attack.',200],
+      ['造成三點傷害。','Deal 4 damage.',424],
+      ['造成三點傷害。','Deal four damage.',424],
+      ['造成三點傷害。','Deal damage.',424],
+      ['一般攻擊。','Normal attack.',200],
+      ['獨眼巨人。','One-eyed giant.',200],
+      ['造成三點傷害兩次。','Deal 3 damage 2 times.',200],
+      ['造成三點傷害兩次。','Deal 3 damage.',424]
+    ]){
+      const input={sourceLanguage:'zh-TW',source:{name:'Test',subtitle:'',abilities:[{title:'Skill',text:original}]},targets:['en']};
+      const response=await call(p=>Response.json({data:{translations:p.q.map(t=>({translatedText:t===original?translated:t}))}}),input);
+      assert.equal(response.status,expected,original+' -> '+translated);
+    }
   }finally{sqlite.close();}
 });
 test('draft review, non-Chinese source, stale translation protection and metadata persistence',async()=>{

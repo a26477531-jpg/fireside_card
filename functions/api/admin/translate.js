@@ -2,11 +2,14 @@ import { json } from '../../_lib/http.js';
 import { authenticate, requirePermission } from '../../_lib/middleware.js';
 import { locales, translation } from '../../_lib/catalog.js';
 import { content } from '../../../translation-workflow.js';
+import { numericSignature } from '../../_lib/translation-numbers.js';
 
 // Only text fields reach Google; IDs, artwork and card stats stay untouched.
-const numbers = text => (text.match(/\d+(?:[.,]\d+)?/g)||[]).sort().join('|');
-const tokens = text => (text.match(/\{[^{}]+\}|\[\[[^\]]+\]\]|%[sd]|[+%×÷=<>]/g)||[]).sort().join('|');
-const preserved = (a,b) => numbers(a)===numbers(b) && tokens(a)===tokens(b);
+const tokens = text => (text.normalize('NFKC').match(/\{[^{}]+\}|\[\[[^\]]+\]\]|%[sd]|[+%×÷=<>]/g)||[]).sort().join('|');
+const preserved = (a,b) => {
+  const expected=numericSignature(b);
+  return numericSignature(a,expected!=='')===expected && tokens(a)===tokens(b);
+};
 function failure(code){const error=new Error(code);error.code=code;return error;}
 function providerFailure(status,payload){
   // Inspect provider text only for classification. Never expose it or credentials.
