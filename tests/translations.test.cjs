@@ -44,6 +44,7 @@ test('language lookup preserves stats and layout, defaults safely, and falls bac
 test('filters use shared mechanics, names search in selected language',()=>{
   const fields=Object.fromEntries(Object.entries({search:'',set:'all',ability:'護盾',attack:'0',health:'0',sort:'mana-asc'}).map(([key,value])=>[key,{value}]));
   context.document.getElementById=id=>fields[id];
+  context.document.body={dataset:{}};context.URLSearchParams=URLSearchParams;context.location={search:''};
   const source=fs.readFileSync(path.join(root,'app.js'),'utf8');
   vm.runInNewContext(source.slice(0,source.indexOf('function render()')),context);
   const totals=[];

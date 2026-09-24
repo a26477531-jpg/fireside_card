@@ -25,7 +25,7 @@
   function formatCoins(amount) {
     const value = Number(amount) || 0;
     const label = I18n ? I18n.t('coins') : '金幣';
-    return `🪙 ${value.toLocaleString(I18n?.language)} ${label}`;
+    return `${value.toLocaleString(I18n?.language)} ${label}`;
   }
 
   function renderNav(user) {

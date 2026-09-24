@@ -2,6 +2,10 @@
 'use strict';
 const $ = id => document.getElementById(id);
 const state = { mana: null, page: 1, view: 'grid' };
+const isFavoritesPage = document.body.dataset.page === 'favorites';
+if (!isFavoritesPage && new URLSearchParams(location.search).get('favorites') === '1') {
+  location.replace('favorites.html');
+}
 const PAGE_SIZE = 15;
 const I18n = window.CardI18n;
 const t = key => I18n.t(key);
@@ -10,7 +14,7 @@ const abilityText = card => card.abilities.map(a => `${a.title} ${a.text}`).join
 function filteredCards() {
   const search = $('search').value.trim().toLocaleLowerCase();
   const list = window.CARDS.map(base => ({...I18n.card(base), filterText: abilityText(base)})).filter(card =>
-    (!window.CardFavorites?.only || window.CardFavorites.has(card.id)) &&
+    (!isFavoritesPage || Boolean(window.CardFavorites?.has(card.id))) &&
     ($('set').value === 'all' || card.collection === $('set').value) &&
     ($('ability').value === 'all' || card.filterText.includes($('ability').value)) &&
     (state.mana === null || (state.mana === 10 ? card.mana >= 10 : card.mana === state.mana)) &&
@@ -25,12 +29,14 @@ function render() {
   const pages = Math.max(1, Math.ceil(list.length/PAGE_SIZE));
   state.page = Math.min(state.page, pages);
   const collection = I18n.collection($('set').value);
-  $('results-count').innerHTML = `${escapeHTML(collection)} · <strong>${list.length}</strong> ${escapeHTML(t('results'))}`;
-  $('section-heading').textContent = collection;
+  const resultLabel = isFavoritesPage ? (window.CardFavorites?.title || '我的收藏') : collection;
+  $('results-count').innerHTML = `${escapeHTML(resultLabel)} · <strong>${list.length}</strong> ${escapeHTML(t('results'))}`;
+  $('section-heading').textContent = isFavoritesPage ? (window.CardFavorites?.title || '我的收藏') : collection;
   $('cards').className = `cards-grid${state.view === 'list' ? ' list' : ''}`;
   $('cards').innerHTML = list.slice((state.page-1)*PAGE_SIZE,state.page*PAGE_SIZE).map(card => `<button class="card" data-id="${escapeHTML(card.id)}" aria-label="${escapeHTML(t('view'))} ${escapeHTML(card.name)}, ${escapeHTML(t('mana'))} ${card.mana}, ${escapeHTML(t('attack'))} ${card.attack}, ${escapeHTML(t('health'))} ${card.health}">${artwork(card)}<div class="card-caption"><h3>${escapeHTML(card.name)}</h3><p>${escapeHTML(I18n.collection(card.collection))} · ${card.mana} ${escapeHTML(t('mana'))}</p></div><p class="list-description">${escapeHTML(abilityText(card))}</p></button>`).join('');
   window.CardTextFit.schedule($('cards'));
   $('empty').hidden = list.length !== 0;
+  if (isFavoritesPage) window.CardFavorites?.renderPage(list.length);
   $('pagination').hidden = pages <= 1;
   $('pagination').innerHTML = `<button data-page="${state.page-1}" ${state.page === 1 ? 'disabled' : ''} aria-label="${escapeHTML(t('prev'))}">‹</button>${Array.from({length:pages},(_,i) => `<button data-page="${i+1}" ${state.page === i+1 ? 'class="selected" aria-current="page"' : ''}>${i+1}</button>`).join('')}<button data-page="${state.page+1}" ${state.page === pages ? 'disabled' : ''} aria-label="${escapeHTML(t('next'))}">›</button>`;
   document.querySelectorAll('[data-mana]').forEach(button => { const selected = Number(button.dataset.mana) === state.mana; button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected)); });
@@ -56,7 +62,7 @@ $('mana-filter').innerHTML = Array.from({length:11},(_,i) => `<button data-mana=
 $('mana-filter').addEventListener('click',event => {const button = event.target.closest('[data-mana]');if(!button)return;const mana = Number(button.dataset.mana);state.mana = state.mana === mana ? null : mana;state.page = 1;render();});
 ['set','ability','sort'].forEach(id => $(id).addEventListener('change',() => {state.page=1;render();}));
 ['search','attack','health'].forEach(id => $(id).addEventListener('input',() => {state.page=1;render();}));
-$('collections').addEventListener('click',event => {const button = event.target.closest('[data-collection]');if(!button)return;$('set').value = button.dataset.collection;state.page=1;render();});
+$('collections')?.addEventListener('click',event => {const button = event.target.closest('[data-collection]');if(!button)return;$('set').value = button.dataset.collection;state.page=1;render();});
 $('more-toggle').addEventListener('click',() => {const open = $('extra-filters').hidden;$('extra-filters').hidden=!open;$('more-toggle').setAttribute('aria-expanded',String(open));});
 ['reset','empty-reset'].forEach(id => $(id).addEventListener('click',resetFilters));
 ['grid','list'].forEach(view => $(view+'-view').addEventListener('click',() => {state.view=view;['grid','list'].forEach(v => {$(v+'-view').classList.toggle('selected',v===view);$(v+'-view').setAttribute('aria-pressed',String(v===view));});render();}));

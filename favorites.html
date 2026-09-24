@@ -11,10 +11,10 @@
 
     <meta
         name="description"
-        content="搜尋怪獸、探索能力，瀏覽爐邊卡牌圖鑑。"
+        content="查看與管理你的收藏卡牌。"
     >
 
-    <title>卡牌庫｜爐邊卡牌</title>
+    <title>我的收藏｜爐邊卡牌</title>
 
     <link
         rel="stylesheet"
@@ -39,18 +39,16 @@
         defer
     ></script>
 
-    <script src="promotions-data.js" defer></script>
-    <script src="promotions.js?v=arrow-2" defer></script>
-    <link rel="stylesheet" href="favorites.css?v=page-1">
+    <link rel="stylesheet" href="favorites.css?v=collection-tabs-20260924">
     <script src="favorites.js?v=page-1" defer></script>
     <link rel="stylesheet" href="commerce.css?v=1">
     <script src="commerce.js?v=nav-active-20260924" defer></script>
     <script src="account.js?v=coin-icon-20260924" defer></script>
-<link rel="stylesheet" href="promotions.css?v=arrow-2">
+
 </head>
 
 
-<body>
+<body data-page="favorites" data-skip-default-title="true">
 
     <!-- 跳過導覽列，直接前往主要內容 -->
     <a
@@ -85,8 +83,7 @@
         <nav aria-label="主要導覽">
 
             <a
-                class="active"
-                href="#library"
+                href="index.html"
              data-nav-label="library">
                 卡牌庫
             </a>
@@ -130,73 +127,14 @@
     <!-- =========================
          主視覺 / 輪播圖
     ========================== -->
-    <section
-        class="hero"
-        aria-label="主題卡牌輪播"
-        aria-roledescription="輪播"
-    >
-
-        <div
-            id="banner-carousel"
-            class="banner-carousel"
-        >
-
-            <!-- 輪播圖片 -->
-            <div class="banner-slides"><!-- 由 promotions.js 依資料集組裝 --></div>
-
-
-            <!-- 上一張 -->
-            <button
-                id="banner-prev"
-                class="banner-arrow prev"
-                aria-label="上一張輪播圖"
-            >
-                ‹
-            </button>
-
-
-            <!-- 下一張 -->
-            <button
-                id="banner-next"
-                class="banner-arrow next"
-                aria-label="下一張輪播圖"
-            >
-                ›
-            </button>
-
-
-            <!-- 輪播控制區 -->
-            <div class="banner-controls">
 
 
 
+    <!-- =========================
+         卡牌庫主要內容
+    ========================== -->
+    <main id="library">
 
-
-                <!-- 暫停 / 播放 -->
-                <button
-                    id="banner-play"
-                    aria-label="暫停自動播放"
-                >
-                    暫停
-                </button>
-
-
-                <!-- 目前圖片編號 -->
-                <span
-                    id="banner-count"
-                    aria-live="off"
-                >
-                    1 / 3
-                </span>
-
-            </div>
-
-        </div>
-
-
-        <!-- =========================
-             主題系列切換
-        ========================== -->
         <nav
             id="collections"
             class="collection-tabs"
@@ -240,14 +178,6 @@
             </button>
 
         </nav>
-
-    </section>
-
-
-    <!-- =========================
-         卡牌庫主要內容
-    ========================== -->
-    <main id="library">
 
 
         <!-- =========================
@@ -503,9 +433,7 @@
 
                 <span></span>
 
-                <h2 id="section-heading">
-                    全部卡牌
-                </h2>
+                <h1 id="section-heading">我的收藏</h1>
 
                 <span></span>
 

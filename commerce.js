@@ -9,8 +9,12 @@
   const t=key=>(labels[window.CardI18n?.language]||labels['zh-TW'])[key];
   function nav(){
     const parent=document.querySelector('.navbar nav');if(!parent)return;
-    for(const [id,key,href] of [['nav-my-cards','myCards','my-cards.html'],['nav-wishlist','wishlist','index.html?favorites=1#library']]){
+    const currentPage=location.pathname.replace(/\/+$/,'').split('/').pop().replace(/\.html$/,'');
+    for(const [id,key,href] of [['nav-my-cards','myCards','my-cards.html'],['nav-wishlist','wishlist','favorites.html']]){
       let link=document.getElementById(id);if(!link){link=document.createElement('a');link.id=id;link.href=href;parent.append(link);}link.textContent=t(key);
+      const isCurrentPage=currentPage===href.replace(/\.html$/,'');
+      link.classList.toggle('active',isCurrentPage);
+      if(isCurrentPage)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');
     }
   }
   const pending=new Map();let busy=false;
@@ -30,7 +34,7 @@
     const opener=document.activeElement;
     const dialog=document.createElement('dialog');dialog.className='purchase-confirm';dialog.setAttribute('aria-labelledby','purchase-confirm-title');
     const title=document.createElement('h2');title.id='purchase-confirm-title';title.textContent=t('confirm');
-    const description=document.createElement('p');description.textContent=`${bundle.name} — ${saved.expectedPrice} ${t('coins')}. ${t('buyPrompt')}`;
+    const description=document.createElement('p');description.textContent=`${CardI18n.product(bundle).name} — ${saved.expectedPrice} ${t('coins')}. ${t('buyPrompt')}`;
     const message=document.createElement('p');message.setAttribute('role','status');
     const confirm=document.createElement('button');confirm.className='gold-button';confirm.textContent=t('confirm');
     const cancel=document.createElement('button');cancel.className='gold-button';cancel.textContent=t('cancel');
