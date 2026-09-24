@@ -13,8 +13,11 @@ function chineseNumber(value){
   return total+section+digit;
 }
 const words={zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+const koreanCounts={'한':1,'두':2,'세':3,'네':4,'다섯':5,'여섯':6,'일곱':7,'여덟':8,'아홉':9,'열':10};
 export function numericSignature(text, writtenEnglish=true){
   let normalized=text.normalize('NFKC');
+  // Native Korean numbers precede counters (e.g. 카드 한 장 = one card).
+  normalized=normalized.replace(/(^|[^가-힣])(한|두|세|네|다섯|여섯|일곱|여덟|아홉|열)(?=\s*(?:장|개|명|마리|번|턴|점|초|배))/g,(_,prefix,n)=>prefix+koreanCounts[n]);
   normalized=normalized.replace(/[零〇一二兩两三四五六七八九十百千萬万億亿]+(?=\s*(?:點|点|張|张|個|个|次|回合|倍|層|层|名|隻|只|頭|头|枚|体|體|秒|分鐘|分钟|%|攻擊|攻击|生命|法力|傷害|伤害))/g,v=>String(chineseNumber(v)));
   normalized=normalized.replace(/^[零〇一二兩两三四五六七八九十百千萬万億亿]+$/,v=>String(chineseNumber(v)));
   // English commonly spells out small quantities or uses an indefinite article.
