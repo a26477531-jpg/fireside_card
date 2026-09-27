@@ -1,7 +1,0 @@
-@charset "utf-8";
-/* CSS Document */
-
-header.navbar {
-	display: flex;
-	justify-content: space-between;
-	}
