@@ -8,7 +8,17 @@
 
 ## 接著修改
 
-四語功能的資料格式、更新指令與練習請看 [多語卡牌教學](多語卡牌教學.md)。卡牌名稱與規則現在請修改 `data/card-translations.csv`，再執行 `node scripts/build-translations.cjs` 產生網站使用的翻譯。
+四語功能的資料格式、更新指令與練習請看 [多語卡牌教學](多語卡牌教學.md)。
+
+正式環境的卡牌資料與翻譯以 Cloudflare D1 為準。
+
+日常新增、修改卡牌與翻譯請使用管理後台。
+
+data/card-translations.csv、
+translations-data.js、
+cards-data.js
+主要保留作為初始資料、開發工具與舊版相容用途，
+不會因管理後台修改而自動更新。
 
 - `index.html`：導覽、橫幅、篩選列、卡牌庫及詳情視窗結構。
 - `index.css`：顏色、字型、桌面與手機版面。主要色彩變數放在最上方。
