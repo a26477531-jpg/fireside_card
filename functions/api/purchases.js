@@ -44,3 +44,29 @@ async function purchase({request,env,data}) {
   }
 }
 export const onRequestPost=[authenticate,purchase];
+
+async function history({request,env,data}) {
+  const page=Number(new URL(request.url).searchParams.get('page')||1);
+  if(!Number.isSafeInteger(page)||page<1||page>100000)
+    return json({ok:false,error:'validation-failed'},{status:400});
+  const pageSize=25;
+  try {
+    // Both the count and rows are scoped to the authenticated session, never a supplied user ID.
+    const result=await env.DB.batch([
+      env.DB.prepare('SELECT COUNT(*) AS total FROM purchase_orders WHERE user_id=?').bind(data.user.id),
+      env.DB.prepare(`SELECT o.product_name,o.currency,o.unit_price,o.quantity,o.total,o.status,o.created_at,o.cards_snapshot,
+        (SELECT printf('ORD-%06d',number) FROM order_numbers WHERE order_id=o.id) AS order_number
+        FROM purchase_orders o WHERE o.user_id=? ORDER BY o.created_at DESC,o.id DESC LIMIT ? OFFSET ?`)
+        .bind(data.user.id,pageSize,(page-1)*pageSize)
+    ]);
+    return json({ok:true,page,pageSize,total:result[0].results[0].total,orders:result[1].results.map(row=>({
+      orderNumber:row.order_number,productName:row.product_name,currency:row.currency,
+      unitPrice:row.unit_price,quantity:row.quantity,total:row.total,status:row.status,createdAt:row.created_at,
+      cards:row.cards_snapshot===null?null:JSON.parse(row.cards_snapshot).map(card=>({id:card.id,name:card.name}))
+    }))});
+  } catch(error) {
+    if(/no such (table|column)/i.test(error.message))return json({ok:false,error:'purchase-not-ready'},{status:503});
+    throw error;
+  }
+}
+export const onRequestGet=[authenticate,history];
