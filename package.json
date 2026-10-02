@@ -1,0 +1,14 @@
+{
+  "name": "fireside-card",
+  "version": "1.0.0",
+  "private": true,
+  "engines": { "node": ">=24 <25" },
+  "scripts": {
+    "check": "node scripts/check-syntax.cjs",
+    "test": "node --test --test-concurrency=1 --test-timeout=120000 tests/*.test.cjs",
+    "ci": "npm run check && npm test"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}

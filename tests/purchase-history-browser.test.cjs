@@ -3,7 +3,7 @@ const http=require('node:http');
 const fs=require('node:fs');
 const path=require('node:path');
 const {database}=require('./helpers/d1.cjs');
-const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 (async()=>{
   const {DB,sqlite}=database();
   const routes={};
@@ -29,7 +29,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
   });
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const base='http://127.0.0.1:'+server.address().port;
-  const browser=await chromium.launch({headless:true,channel:process.env.PLAYWRIGHT_CHANNEL||'msedge'});
+  const browser=await chromium.launch({headless:true,channel:process.env.PLAYWRIGHT_CHANNEL});
   try {
     sqlite.exec("INSERT INTO purchase_orders(id,user_id,player_username,player_email,product_id,product_name,currency,unit_price,quantity,total,status,cards_snapshot) VALUES ('history-test',2,'member','member@example.test','pack','Test <pack>','COIN',30,1,30,'completed','[{\"id\":\"25\",\"name\":\"Card <one>\"}]')");
     const context=await browser.newContext();
@@ -42,7 +42,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     for(const lang of ['en','ja','ko','zh-TW']){await page.locator('#language').selectOption(lang);assert.ok(await page.locator('#history-title').textContent());}
     await page.setViewportSize({width:390,height:844});
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-    await page.screenshot({path:'output/purchase-history-mobile.png',fullPage:true});
+    if(process.env.PURCHASE_HISTORY_SCREENSHOT)await page.screenshot({path:process.env.PURCHASE_HISTORY_SCREENSHOT,fullPage:true});
     const insert=sqlite.prepare("INSERT INTO purchase_orders(id,user_id,player_username,player_email,product_id,product_name,currency,unit_price,quantity,total,status,created_at) VALUES (?,2,'member','member@example.test','legacy','Older pack','COIN',10,1,10,'completed','2020-01-01T00:00:00.000Z')");
     for(let n=0;n<25;n++)insert.run('older-'+n);
     await page.locator('#history-reload').click();await page.waitForFunction(()=>document.querySelectorAll('.history-order').length===25);

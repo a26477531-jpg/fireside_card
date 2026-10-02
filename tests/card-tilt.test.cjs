@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 (async () => {
-  const browser = await chromium.launch({channel:'msedge',headless:true});
+  const browser = await chromium.launch({channel:process.env.PLAYWRIGHT_CHANNEL,headless:true});
   try {
     const page = await browser.newPage({viewport:{width:1000,height:850},hasTouch:true});
     const errors = [];

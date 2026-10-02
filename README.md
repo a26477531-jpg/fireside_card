@@ -336,6 +336,31 @@ Production 與 Preview / Staging 資料庫需分別管理。
 
 ## 測試
 
+### GitHub Actions CI
+
+工作流程位於 `.github/workflows/ci.yml`，每次 push、Pull Request 或手動執行時，會使用 Node.js 24：
+
+1. 透過 `npm ci` 安裝鎖定版本的測試依賴。
+2. 安裝 Playwright Chromium 與 Linux 系統依賴。
+3. 檢查前端、Functions、工具與測試的 JavaScript 語法。
+4. 執行 `tests/*.test.cjs` 的全部測試，涵蓋 API、SQLite migration、翻譯、卡牌版面及瀏覽器操作。
+
+本機執行相同檢查：
+
+```bash
+npm ci
+npx playwright install chromium
+npm run ci
+```
+
+請使用 Node.js 24；資料庫測試需要內建的 `node:sqlite`。瀏覽器預設使用 Playwright Chromium，也可透過 `PLAYWRIGHT_CHANNEL=msedge` 指定已安裝的 Edge。每個測試檔有 120 秒上限，整個 CI 工作有 15 分鐘上限。
+
+瀏覽器測試預設不輸出截圖；需要輪播或購買紀錄截圖時，可分別設定 `PROMOTIONS_SCREENSHOT` 或 `PURCHASE_HISTORY_SCREENSHOT` 為輸出路徑。
+
+CI 使用記憶體 SQLite 與模擬的翻譯服務，不需要 Cloudflare 或 Google API Secrets，也不會部署網站或套用遠端 migration。現有 Cloudflare 自動部署不會因新增 CI 就自動等待測試結果。
+
+提交並推送這些設定後，可在 GitHub 儲存庫的 **Actions → CI** 查看結果。若要要求 PR 通過測試才能合併，請在目標分支的 Ruleset / Branch protection 中，將 `Syntax and tests` 設為必要檢查；工作流程本身不會啟用分支保護。
+
 專案包含後端與功能測試，放置於：
 
 ```text
