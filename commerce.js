@@ -6,11 +6,12 @@
     ja:{myCards:'所持カード',wishlist:'お気に入り',shopBuy:'パックを購入',shopIntro:'サイト内コインで購入すると所持カードに追加されます。お気に入りは保持されます。',confirm:'購入を確定',cancel:'キャンセル',buyPrompt:'このパックを購入しますか？再購入すると所持枚数が増えます。',working:'購入中…',success:'所持カードに追加しました。',login:'ログインしてください。',insufficient:'コインが不足しています。チャージしてください。',changed:'商品が変更されました。再読み込みしてください。',unavailable:'購入の設定が完了していません。',retry:'結果を確認できません。同じ購入を再試行しても二重請求されません。',ownedIntro:'購入したカードです。お気に入り解除でも所持カードは残ります。',empty:'所持カードはありません。ショップで購入できます。',loadError:'読み込みに失敗しました。',reload:'再読み込み',owned:'所持枚数',search:'所持カードを検索',favorite:'お気に入りに追加',unfavorite:'お気に入り解除',favoriteError:'保存に失敗しました。',loginOwned:'所持カードを見るにはログインしてください。',details:'カードを見る',close:'閉じる',coins:'コイン'},
     ko:{myCards:'내 카드',wishlist:'즐겨찾기',shopBuy:'팩 구매',shopIntro:'사이트 코인으로 구매한 카드는 내 카드에 추가됩니다. 즐겨찾기는 유지됩니다.',confirm:'구매 확인',cancel:'취소',buyPrompt:'이 팩을 구매할까요? 다시 구매하면 보유 수량이 늘어납니다.',working:'구매 중…',success:'내 카드에 추가했습니다.',login:'로그인해 주세요.',insufficient:'코인이 부족합니다. 충전해 주세요.',changed:'상품이 변경되었습니다. 새로고침해 주세요.',unavailable:'구매 설정이 아직 완료되지 않았습니다.',retry:'결과를 확인할 수 없습니다. 같은 구매를 재시도해도 중복 차감되지 않습니다.',ownedIntro:'구매한 카드입니다. 즐겨찾기를 해제해도 보유 카드는 유지됩니다.',empty:'보유 카드가 없습니다. 상점에서 구매해 주세요.',loadError:'불러오지 못했습니다.',reload:'다시 불러오기',owned:'보유 수량',search:'내 카드 검색',favorite:'즐겨찾기 추가',unfavorite:'즐겨찾기 해제',favoriteError:'저장에 실패했습니다.',loginOwned:'구매한 카드를 보려면 로그인해 주세요.',details:'카드 보기',close:'닫기',coins:'코인'}
   };
+  for(const [language,label] of Object.entries({'zh-TW':'購買紀錄',en:'Purchase history',ja:'購入履歴',ko:'구매 내역'}))labels[language].purchaseHistory=label;
   const t=key=>(labels[window.CardI18n?.language]||labels['zh-TW'])[key];
   function nav(){
     const parent=document.querySelector('.navbar nav');if(!parent)return;
     const currentPage=location.pathname.replace(/\/+$/,'').split('/').pop().replace(/\.html$/,'');
-    for(const [id,key,href] of [['nav-my-cards','myCards','my-cards.html'],['nav-wishlist','wishlist','favorites.html']]){
+    for(const [id,key,href] of [['nav-my-cards','myCards','my-cards.html'],['nav-wishlist','wishlist','favorites.html'],['nav-purchases','purchaseHistory','purchases.html']]){
       let link=document.getElementById(id);if(!link){link=document.createElement('a');link.id=id;link.href=href;parent.append(link);}link.textContent=t(key);
       const isCurrentPage=currentPage===href.replace(/\.html$/,'');
       link.classList.toggle('active',isCurrentPage);
@@ -58,6 +59,7 @@
         }
         forget();window.FiresideAccount.updateCoinBalance(result.coinBalance);message.textContent=t('success');confirm.hidden=true;
         const link=document.createElement('a');link.href='my-cards.html';link.textContent=t('myCards');dialog.append(link);
+        const historyLink=document.createElement('a');historyLink.href='purchases.html';historyLink.textContent=t('purchaseHistory');dialog.append(historyLink);
       }catch{message.textContent=t('retry');}
       finally{submitting=false;confirm.disabled=false;cancel.disabled=false;}
     };

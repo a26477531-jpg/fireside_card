@@ -5,7 +5,7 @@ const {parseCSV,compile}=require('../scripts/build-translations.cjs');
 const context={window:{},document:{documentElement:{}},localStorage:{getItem(){return 'invalid';},setItem(){}}};
 for(const file of ['cards-data.js','translations-data.js','i18n.js'])vm.runInNewContext(fs.readFileSync(path.join(root,file),'utf8'),context);
 const cards=context.window.CARDS;
-const csv=fs.readFileSync(path.join(root,'data/card-translations.csv'),'utf8');
+const csv=fs.readFileSync(path.join(root,'data/card-translations.csv'),'utf8').replace(/\r\n/g,'\n');
 test('CSV supports BOM, commas, escaped quotes and multiline cells',()=>{
   assert.deepEqual(parseCSV('\ufeffid,text\r\n01,"A, B ""quoted""\nnext line"\r\n'),[['id','text'],['01','A, B "quoted"\nnext line']]);
   assert.throws(()=>parseCSV('id,text\n01,"unclosed'),/引號/);
@@ -18,8 +18,8 @@ test('124 complete translations round-trip into the shipped JS file',()=>{
   for(const card of cards)for(const lang of ['zh-TW','en','ja','ko'])assert.equal(output[card.id][lang].abilities.length,card.abilities.length);
 });
 test('duplicate keys, unknown locales, incomplete rows are rejected',()=>{
-  const row=csv.split('\r\n')[1];
-  assert.throws(()=>compile(csv+row+'\r\n',cards),/重複/);
+  const row=csv.split(/\r?\n/)[1];
+  assert.throws(()=>compile(csv.trimEnd()+'\n'+row+'\n',cards),/重複/);
   assert.throws(()=>compile(csv.replace('"en"','"fr"'),cards),/未知/);
   assert.throws(()=>compile(csv.replace('"Murloc Chief"','""'),cards),/不完整/);
 });

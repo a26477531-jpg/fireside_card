@@ -3,7 +3,7 @@ const http=require('node:http');
 const fs=require('node:fs');
 const path=require('node:path');
 const {database}=require('./helpers/d1.cjs');
-const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 (async()=>{
   const {DB,sqlite}=database();
   const routes={};let translationCalls=0,failTranslation=false,missingTranslationKey=true;
@@ -34,7 +34,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
   });
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const base='http://127.0.0.1:'+server.address().port;
-  const browser=await chromium.launch({headless:true,channel:process.env.PLAYWRIGHT_CHANNEL||'msedge'});
+  const browser=await chromium.launch({headless:true,channel:process.env.PLAYWRIGHT_CHANNEL});
   try {
     const context=await browser.newContext();await context.addCookies([{name:'fireside_session',value:'admin-session',url:base}]);
     const page=await context.newPage();const errors=[];page.on('pageerror',e=>{errors.push(e.message);console.error(e.message);});
@@ -258,7 +258,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/User/.cache/
     await page.getByRole('button',{name:'確認購買',exact:true}).click();
     await page.getByText('購買成功！卡牌已加入「我的卡片」。',{exact:true}).waitFor();
     assert.equal(sqlite.prepare('SELECT coin_balance FROM users WHERE id=2').get().coin_balance,30);
-    await page.locator('.purchase-confirm a').click();await page.locator('.owned-card').first().waitFor();
+    await page.locator('.purchase-confirm a[href="my-cards.html"]').click();await page.locator('.owned-card').first().waitFor();
     assert.equal(await page.locator('.owned-card').count(),2);
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     await page.locator('.owned-favorite[data-card="25"]').click();
