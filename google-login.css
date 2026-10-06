@@ -1,0 +1,6 @@
+.google-account-panel { margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(211, 170, 91, .3); }
+.google-account-panel h2 { font-size: 1.1rem; margin: 0 0 10px; }
+.google-description { line-height: 1.7; overflow-wrap: anywhere; }
+.google-action { width: 100%; min-height: 44px; }
+.google-action:disabled { opacity: .6; cursor: not-allowed; }
+.google-account-panel [hidden] { display: none; }

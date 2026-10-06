@@ -53,6 +53,7 @@
 
     const link = $('nav-account');
     if (link) {
+      link.href = user ? 'login.html' : 'register.html';
       link.textContent = user ? user.username : (I18n ? I18n.t('register') : '註冊');
       link.classList.toggle('is-signed-in', Boolean(user));
     }

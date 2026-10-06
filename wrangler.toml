@@ -23,6 +23,9 @@ compatibility_flags = ["nodejs_compat"]
 
 # Production email and reset links use the live domain.
 [vars]
+# Google sign-in: configure GOOGLE_CLIENT_ID and GOOGLE_AUTH_ORIGIN per environment
+# in Pages settings, and GOOGLE_CLIENT_SECRET as an encrypted secret.
+# See Google登入部署說明.md. Credentials must not be committed here.
 PASSWORD_RESET_FROM = "Fireside Cards <noreply@firesidecard.com>"
 PASSWORD_RESET_ORIGIN = "https://firesidecard.com"
 
