@@ -92,6 +92,7 @@
   function applyLoginUI() {
     document.title = `${t('loginHeading')} | ${t('brand')}`;
     $('login-heading').textContent = t('loginHeading');
+    $('forgot-password-link').textContent = ({'zh-TW':'忘記密碼？',en:'Forgot password?',ja:'パスワードを忘れた方',ko:'비밀번호를 잊으셨나요?'})[I18n.language];
     $('login-intro').textContent = t('loginIntro');
     $('label-identifier').textContent = t('fieldIdentifier');
     $('label-login-password').textContent = t('fieldPassword');
