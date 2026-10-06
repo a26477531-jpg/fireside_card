@@ -9,11 +9,18 @@ export async function onRequestPost({ request, env }) {
   const email = typeof parsed.body.email === 'string' ? parsed.body.email.trim() : '';
   if (validateEmail(email)) return json({ ok: false, error: 'validation-failed' }, { status: 400 });
   let base;
+  const missing = ['PASSWORD_RESET_ORIGIN', 'RESEND_API_KEY', 'PASSWORD_RESET_FROM']
+    .filter(name => typeof env[name] !== 'string' || !env[name].trim());
+  if (missing.length) {
+    console.error('Password reset configuration missing:', missing.join(', '));
+    return json({ ok: false, error: 'service-unavailable' }, { status: 503 });
+  }
   try {
     base = new URL(env.PASSWORD_RESET_ORIGIN);
     if (base.protocol !== 'https:' || base.username || base.password) throw new Error();
     if (!env.RESEND_API_KEY || !env.PASSWORD_RESET_FROM) throw new Error();
   } catch {
+    console.error('Password reset configuration invalid: PASSWORD_RESET_ORIGIN must be an HTTPS URL without credentials');
     return json({ ok: false, error: 'service-unavailable' }, { status: 503 });
   }
   const now = Date.now();
