@@ -51,6 +51,8 @@ https://firesidecard.com/
 
 ### 會員系統
 
+Google 登入與既有會員綁定的程式已加入，啟用前需完成 OAuth 設定與資料庫 migration。操作與部署步驟見 [Google登入部署說明](Google登入部署說明.md)。
+
 提供：
 
 - 註冊
