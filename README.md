@@ -1,11 +1,13 @@
 # Fireside Cards｜爐邊卡牌
 
+文件更新：2026-10-07。
+
 Fireside Cards 是一個以卡牌蒐集與瀏覽為主題的 Web Application，
 使用原生 HTML、CSS、JavaScript 開發，並透過 Cloudflare Pages、Pages Functions 與 Cloudflare D1 建構前後端功能。
 
 網站已部署上線：
 
-https://firesidecard.com/
+[正式站](https://firesidecard.com/) · [Staging](https://staging.firesidecard.com/)
 
 本專案最初以卡牌資料庫介面作為練習起點，後續逐步擴充會員、收藏、商城、虛擬貨幣、卡牌持有、管理後台、多語系與資料庫等功能。
 
@@ -51,16 +53,20 @@ https://firesidecard.com/
 
 ### 會員系統
 
-Google 登入與既有會員綁定的程式已加入，啟用前需完成 OAuth 設定與資料庫 migration。操作與部署步驟見 [Google登入部署說明](Google登入部署說明.md)。
+Google 登入與既有會員綁定已合併至 `main` 並部署正式站。Production 與 Preview 已各自設定 OAuth 用戶端、三項 Secret 與 Google 資料表；正式站 `/api/google/status` 已確認回傳 `enabled: true`。Staging 已實際驗證舊會員綁定及 Google 再登入，正式站真人綁定與再登入仍待驗收。操作、設定與驗收紀錄見 [Google登入部署說明](Google登入部署說明.md)。
 
 提供：
 
 - 註冊
 - 登入
+- Google 登入與登入後綁定
+- 忘記密碼與郵件重設
 - Session 驗證
 - 帳號狀態顯示
 
 會員登入後可使用收藏、商城、我的卡片等功能。
+
+綁定 Google 沿用原會員 ID，保留密碼、權限、收藏、金幣與卡牌。相同 Email 不會自動合併帳號；既有會員需先用帳密登入再綁定。Google 新會員可使用忘記密碼流程設定密碼，詳見 [密碼重設部署說明](密碼重設部署說明.md)。
 
 ---
 
@@ -216,6 +222,8 @@ Google 登入與既有會員綁定的程式已加入，啟用前需完成 OAuth 
 
 卡牌列表與卡牌詳情共用相同的版面資料。
 
+既有 31 張卡牌使用 `card-template.json` 的統一範本，圖片存放於 `cards-unified-31/`，由 `card-artwork.js` 共用繪製。支援滑鼠懸停傾斜、詳情頁滑鼠／觸控拖曳和鍵盤旋轉；降低動態效果偏好會停用自動懸停傾斜。
+
 ---
 
 ## 技術架構
@@ -258,6 +266,8 @@ Google 登入與既有會員綁定的程式已加入，啟用前需完成 OAuth 
 ### External Service
 
 - Google Cloud Translation API
+- Google OAuth 2.0 / OpenID Connect（登入與綁定）
+- Resend（密碼重設郵件）
 
 ---
 
@@ -274,6 +284,10 @@ Preview / Staging：
 `fireside-cards-staging-db`
 
 藉此避免測試資料影響正式網站。
+
+`main` 用於 Production，`staging` 用於 Preview。兩個環境的會員、Google 綁定、收藏、卡牌、訂單與 Secret 分開管理；合併程式不會複製上述資料。Secret 更新後需重新部署對應環境。
+
+專案一般變數及 D1 binding 由 `wrangler.toml` 管理。Google 登入的 `GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`、`GOOGLE_AUTH_ORIGIN` 目前全部使用控制台 Secret；翻譯使用獨立的 `GOOGLE_TRANSLATE_API_KEY`，兩者不能互換。
 
 ---
 
@@ -334,6 +348,10 @@ Cloudflare D1 migration 不會因為 Git Push 自動執行。
 
 Production 與 Preview / Staging 資料庫需分別管理。
 
+目前 migration 檔案為 `0001` 至 `0010`，其中 `0009_password_reset.sql` 提供密碼重設，`0010_google_login.sql` 提供 Google 綁定與 OAuth state。不要將最新檔案編號當成遠端資料庫已套用的證明。
+
+本專案曾透過 `d1 execute --file` 與 D1 Console 手動套用 SQL；這些操作不會自動同步 `d1_migrations` 紀錄。既有環境應先核對資料表、欄位與 migration 紀錄，再執行缺少的 SQL，避免重跑 `ALTER TABLE` 或已建立的資料表。
+
 ---
 
 ## 測試
@@ -357,9 +375,11 @@ npm run ci
 
 請使用 Node.js 24；資料庫測試需要內建的 `node:sqlite`。瀏覽器預設使用 Playwright Chromium，也可透過 `PLAYWRIGHT_CHANNEL=msedge` 指定已安裝的 Edge。每個測試檔有 120 秒上限，整個 CI 工作有 15 分鐘上限。
 
-瀏覽器測試預設不輸出截圖；需要輪播或購買紀錄截圖時，可分別設定 `PROMOTIONS_SCREENSHOT` 或 `PURCHASE_HISTORY_SCREENSHOT` 為輸出路徑。
+部分瀏覽器測試透過環境變數輸出截圖，例如 `PROMOTIONS_SCREENSHOT` 或 `PURCHASE_HISTORY_SCREENSHOT`；Google 瀏覽器測試固定輸出 `output/google-linked-mobile.png`。
 
-CI 使用記憶體 SQLite 與模擬的翻譯服務，不需要 Cloudflare 或 Google API Secrets，也不會部署網站或套用遠端 migration。現有 Cloudflare 自動部署不會因新增 CI 就自動等待測試結果。
+CI 使用記憶體 SQLite 與模擬的翻譯、Google OAuth 和郵件服務，不需要 Cloudflare、Google 或 Resend Secrets，也不會部署網站或套用遠端 migration。現有 Cloudflare 自動部署不會因新增 CI 就自動等待測試結果。
+
+2026-10-07 合併 Google 功能前，本機 `npm run ci` 已完成 81 個 JavaScript 檔案語法檢查及 26 項測試，全部通過。這是當次本機結果，並非 Google 真實授權或 GitHub Actions 結果。
 
 提交並推送這些設定後，可在 GitHub 儲存庫的 **Actions → CI** 查看結果。若要要求 PR 通過測試才能合併，請在目標分支的 Ruleset / Branch protection 中，將 `Syntax and tests` 設為必要檢查；工作流程本身不會啟用分支保護。
 
@@ -372,6 +392,8 @@ tests/
 測試範圍包含：
 
 - 帳號與權限
+- Google OAuth state、PKCE、綁定衝突、Session 變更與資產保留
+- 密碼重設、憑證到期及 Session 撤銷
 - 收藏
 - 卡牌購買
 - 金幣扣款
@@ -398,6 +420,11 @@ fireside_card/
 ├── login.html
 ├── register.html
 ├── account.js
+├── google-login.js
+├── google-login.css
+├── forgot-password.html
+├── reset-password.html
+├── password-recovery.js
 │
 ├── favorites.html
 ├── favorites.js
@@ -434,6 +461,8 @@ fireside_card/
 更詳細的開發與部署說明：
 
 - [管理後台說明](管理後台說明.md)
+- [Google 登入部署說明](Google登入部署說明.md)
+- [密碼重設部署說明](密碼重設部署說明.md)
 - [多語卡牌教學](多語卡牌教學.md)
 - [購買功能部署說明](購買功能部署說明.md)
 - [輪播維護說明](輪播維護說明.md)
